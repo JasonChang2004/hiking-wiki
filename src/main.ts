@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import './assets/index.css'
+import './assets/theme.css'
+import './assets/wiki-theme.css' // 導入維基風格的主題
 
 import { createPinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'

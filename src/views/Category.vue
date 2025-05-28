@@ -20,25 +20,81 @@ onMounted(async () => {
   articles.value = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   loading.value = false
 })
+
+// 格式化日期
+const formatDate = (ts: any) => {
+  if (!ts) return '';
+  const d = ts?.toDate?.();
+  if (!d) return '';
+  
+  return d.toLocaleDateString('zh-TW', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+}
 </script>
 
 <template>
-  <div class="p-6">
-    <h1 class="text-2xl font-bold mb-4 text-indigo-700">分類：{{ $route.params.name }}</h1>
-    <div v-if="loading">載入中...</div>
-    <div v-else-if="articles.length === 0">目前沒有該分類的文章。</div>
+  <div class="wiki-theme max-w-4xl mx-auto">
+    <!-- 維基風格頁面標題 -->
+    <h1 class="text-3xl font-normal border-b border-wiki-border-light pb-2 mb-4">
+      分類：{{ $route.params.name }}
+    </h1>
+    
+    <!-- 載入狀態 -->
+    <div v-if="loading" class="wiki-notice">
+      <p>正在載入文章...</p>
+    </div>
+    
+    <!-- 無文章提示 -->
+    <div v-else-if="articles.length === 0" class="wiki-notice">
+      <p>目前沒有該分類的文章。</p>
+      <p class="mt-2">
+        <router-link to="/" class="text-wiki-link hover:underline">返回首頁</router-link>
+        或探索其他分類。
+      </p>
+    </div>
+    
+    <!-- 文章列表 - 維基風格 -->
     <div v-else>
-      <div
-        v-for="article in articles"
-        :key="article.id"
-        class="mb-4 p-4 border rounded bg-white shadow"
-      >
-        <h3 class="text-lg font-semibold text-green-700 hover:underline cursor-pointer">
-          <router-link :to="`/articles/${article.id}`">{{ article.title }}</router-link>
-        </h3>
-        <p class="text-sm text-gray-600">✍️ {{ article.displayName }} · 🕒 {{ article.createdAt?.toDate().toLocaleString() }}</p>
-        <p class="text-sm text-indigo-600 mt-1">🏷️ 分類：{{ article.category }}</p>
-        <p class="mt-2 text-gray-800 line-clamp-3">{{ article.content }}</p>
+      <p class="text-sm text-gray-600 mb-4">
+        此分類下共有 {{ articles.length }} 篇文章
+      </p>
+      
+      <!-- 維基風格的文章列表 -->
+      <div class="space-y-6">
+        <div
+          v-for="article in articles"
+          :key="article.id"
+          class="pb-4 border-b border-wiki-border-light last:border-0"
+        >
+          <h3 class="mb-1">
+            <router-link 
+              :to="`/articles/${article.id}`" 
+              class="text-wiki-link hover:underline text-lg"
+            >
+              {{ article.title }}
+            </router-link>
+          </h3>
+          
+          <div class="text-sm text-gray-600 mb-2">
+            <span>作者：{{ article.displayName }}</span>
+            <span class="mx-2">|</span>
+            <span>發布於：{{ formatDate(article.createdAt) }}</span>
+          </div>
+          
+          <p class="text-gray-700 line-clamp-3">
+            {{ article.content }}
+          </p>
+        </div>
+      </div>
+      
+      <!-- 頁面底部導航 -->
+      <div class="mt-6 pt-4 border-t border-wiki-border-light">
+        <router-link to="/" class="text-wiki-link hover:underline">
+          返回首頁
+        </router-link>
       </div>
     </div>
   </div>

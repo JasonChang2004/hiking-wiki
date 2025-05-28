@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { auth } from './firebase'
 import { useNotificationsStore } from './store/notifications'
-import LoginButton from './components/LoginButton.vue'
+import LoginButton from './components/auth/LoginButton.vue'
 
 const notificationsStore = useNotificationsStore()
 
@@ -16,44 +16,60 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-900">
-    <nav class="bg-white shadow-md p-4 flex justify-between items-center">
-      <div class="flex space-x-4">
-        <router-link to="/" class="text-blue-600 hover:underline">🏠 首頁</router-link>
-        <router-link to="/about" class="text-blue-600 hover:underline">📘 關於</router-link>
-        <router-link to="/review" class="text-blue-600 hover:underline">🧑‍⚖️ 審核</router-link>
-        <router-link to="/my-articles" class="text-blue-600 hover:underline">📝 我的投稿</router-link>
-        <router-link to="/admin" class="text-blue-600 hover:underline">👑 管理員後台</router-link>
-        <router-link to="/notifications" class="text-blue-600 hover:underline relative">
-          🔔 通知
-          <span
-            v-if="notificationsStore.unreadCount > 0"
-            class="absolute -top-1 -right-3 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full"
-          >
-            {{ notificationsStore.unreadCount }}
-          </span>
+  <div class="min-h-screen wiki-theme">
+    <!-- 導覽列 -->
+    <nav class="w-full border-b border-wiki-border-light bg-wiki-bg">
+      <div class="max-w-5xl mx-auto px-4 py-2 flex justify-between items-center">
+        <!-- Logo -->
+        <router-link to="/" class="flex items-center space-x-2">
+          <div class="text-2xl">🏔️</div>
+          <div class="font-medium text-xl">山林知識庫</div>
         </router-link>
+
+        <!-- 導覽列項目 -->
+        <div class="flex space-x-1 items-center">
+          <router-link to="/" class="wiki-nav-item">首頁</router-link>
+          <router-link to="/about" class="wiki-nav-item">關於</router-link>
+          <router-link to="/review" class="wiki-nav-item">審核</router-link>
+          <router-link to="/my-articles" class="wiki-nav-item">我的投稿</router-link>
+          <router-link to="/admin" class="wiki-nav-item">管理員</router-link>
+          <router-link to="/notifications" class="wiki-nav-item relative">
+            通知
+            <span
+              v-if="notificationsStore.unreadCount > 0"
+              class="ml-1 text-xs px-1.5 bg-red-50 text-red-600 border border-red-200 rounded"
+            >
+              {{ notificationsStore.unreadCount }}
+            </span>
+          </router-link>
+          <div class="ml-2">
+            <LoginButton />
+          </div>
+        </div>
       </div>
-      <LoginButton />
     </nav>
 
-    <main class="max-w-3xl mx-auto mt-6">
+    <!-- 主內容 -->
+    <main class="max-w-6xl mx-auto mt-16 pt-4 px-4">
       <router-view />
     </main>
   </div>
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.wiki-nav-item {
+  padding: 0.5rem 0.75rem;
+  color: var(--wiki-link);
+  text-decoration: none;
+  font-size: 0.95rem;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+.wiki-nav-item:hover {
+  text-decoration: underline;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+.router-link-active.wiki-nav-item {
+  font-weight: 500;
+  background-color: var(--wiki-bg-light);
 }
 </style>

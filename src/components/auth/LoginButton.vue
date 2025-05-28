@@ -1,23 +1,21 @@
 <template>
-  <div class="flex items-center space-x-2">
-    <button
-      v-if="!user"
-      @click="login"
-      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-    >
+  <template v-if="!user">
+    <button @click="login" class="wiki-button">
       使用 Google 登入
     </button>
-    <div v-else class="flex items-center space-x-2">
-      <img v-if="user.photoURL" :src="user.photoURL" alt="avatar" class="w-8 h-8 rounded-full" />
-      <span>{{ user.displayName }}</span>
-      <button @click="logout" class="ml-2 text-red-500 hover:underline">登出</button>
-    </div>
-  </div>
+  </template>
+  <template v-else>
+    <span v-if="user.displayName" class="hidden sm:inline text-gray-600 mr-2">{{ user.displayName }}</span>
+    <button @click="logout" class="text-wiki-link hover:underline">
+      登出
+    </button>
+  </template>
 </template>
+
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { auth, provider, db } from '../firebase'
+import { auth, provider, db } from '../../firebase'
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'

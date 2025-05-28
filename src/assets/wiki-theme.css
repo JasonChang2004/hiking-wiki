@@ -1,0 +1,330 @@
+/* 維基百科風格的主題 */
+
+/* 基本變量 */
+:root {
+  --wiki-link: #0645ad;
+  --wiki-link-visited: #0b0080;
+  --wiki-link-hover: #3366bb;
+  --wiki-heading: #111;
+  --wiki-border: #a2a9b1;
+  --wiki-border-light: #eaecef;
+  --wiki-bg: #ffffff;
+  --wiki-bg-gray: #f8f9fa;
+  --wiki-bg-light: #f6f6f6;
+  --wiki-text: #222;
+  --wiki-text-light: #54595d;
+}
+
+/* 全局樣式 */
+.wiki-theme {
+  font-family: 'Liberation Serif', 'Linux Libertine', Georgia, Times, serif;
+  color: var(--wiki-text);
+  line-height: 1.6;
+  background-color: var(--wiki-bg);
+}
+
+/* 標題樣式 */
+.wiki-theme h1, .wiki-theme .h1 {
+  font-family: 'Linux Libertine', Georgia, Times, serif;
+  font-size: 1.8em;
+  border-bottom: 1px solid var(--wiki-border-light);
+  padding-bottom: 0.25em;
+  margin-bottom: 0.5em;
+  font-weight: normal;
+}
+
+.wiki-theme h2, .wiki-theme .h2 {
+  font-family: 'Linux Libertine', Georgia, Times, serif;
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--wiki-border-light);
+  padding-bottom: 0.25em;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: normal;
+}
+
+.wiki-theme h3, .wiki-theme .h3 {
+  font-size: 1.2em;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 500;
+}
+
+/* 連結樣式 */
+.wiki-theme a {
+  color: var(--wiki-link);
+  text-decoration: none;
+}
+
+.wiki-theme a:visited {
+  color: var(--wiki-link-visited);
+}
+
+.wiki-theme a:hover {
+  text-decoration: underline;
+  color: var(--wiki-link-hover);
+}
+
+/* 清單樣式 */
+.wiki-theme ul {
+  padding-left: 1.6em;
+  margin: 0.3em 0 0.6em;
+}
+
+.wiki-theme li {
+  margin-bottom: 0.1em;
+}
+
+/* 表格樣式 */
+.wiki-theme table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.wiki-theme table, .wiki-theme th, .wiki-theme td {
+  border: 1px solid var(--wiki-border-light);
+}
+
+.wiki-theme th {
+  background-color: var(--wiki-bg-light);
+  padding: 0.5em;
+  text-align: left;
+  font-weight: normal;
+}
+
+.wiki-theme td {
+  padding: 0.5em;
+  vertical-align: top;
+}
+
+/* 引文樣式 */
+.wiki-theme blockquote {
+  border-left: 3px solid var(--wiki-border-light);
+  margin: 1em 0;
+  padding: 0.5em 0 0.5em 1em;
+  color: var(--wiki-text-light);
+}
+
+/* 卡片樣式 - 類似維基百科的內容框 */
+.wiki-card {
+  border: 1px solid var(--wiki-border-light);
+  background-color: var(--wiki-bg-gray);
+  padding: 1em;
+  margin: 1em 0;
+}
+
+.wiki-card-header {
+  border-bottom: 1px solid var(--wiki-border-light);
+  padding-bottom: 0.5em;
+  margin-bottom: 0.5em;
+  font-weight: bold;
+}
+
+/* 索引清單 - 模仿維基百科目錄 */
+.wiki-index {
+  background-color: var(--wiki-bg-light);
+  border: 1px solid var(--wiki-border-light);
+  display: table;
+  padding: 0.5em;
+  margin: 1em 0;
+}
+
+.wiki-index-title {
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 0.25em;
+}
+
+.wiki-index-list {
+  list-style-type: decimal;
+  padding-left: 2em;
+}
+
+.wiki-index-list li {
+  padding: 0.1em 0;
+}
+
+/* 參考資料樣式 */
+.wiki-reference {
+  font-size: 0.9em;
+}
+
+.wiki-reference-list {
+  border-top: 1px solid var(--wiki-border-light);
+  padding-top: 1em;
+}
+
+.wiki-reference-item {
+  margin-bottom: 0.5em;
+}
+
+/* 內文樣式 */
+.wiki-text {
+  margin-top: 1em;
+  line-height: 1.65;
+}
+
+.wiki-text p {
+  margin-bottom: 0.8em;
+}
+
+/* 維基百科常見的通知樣式 */
+.wiki-notice {
+  border-left: 4px solid var(--wiki-border);
+  padding: 0.5em 1em;
+  background-color: var(--wiki-bg-light);
+  margin: 1em 0;
+}
+
+/* 維基風格的按鈕樣式 */
+.wiki-button {
+  display: inline-block;
+  padding: 0.4em 0.8em;
+  background-color: var(--wiki-bg-light);
+  border: 1px solid var(--wiki-border-light);
+  color: var(--wiki-link);
+  text-decoration: none;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.wiki-button:hover {
+  background-color: #eaecef;
+  text-decoration: none;
+}
+
+/* 維基風格的輸入框 */
+.wiki-input {
+  border: 1px solid var(--wiki-border-light);
+  padding: 0.4em 0.6em;
+  margin: 0.2em 0;
+  width: 100%;
+  font-family: inherit;
+}
+
+.wiki-input:focus {
+  border-color: var(--wiki-border);
+  outline: none;
+}
+
+/* 維基風格分隔線 */
+.wiki-divider {
+  border: 0;
+  border-top: 1px solid var(--wiki-border-light);
+  margin: 1.5em 0;
+}
+
+/* 維基風格的標籤列表 */
+.wiki-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 0.5em 0;
+}
+
+.wiki-tag {
+  display: inline-block;
+  padding: 0.2em 0.5em;
+  background-color: var(--wiki-bg-light);
+  border: 1px solid var(--wiki-border-light);
+  font-size: 0.85em;
+  text-decoration: none;
+  color: var(--wiki-text);
+}
+
+.wiki-tag:hover {
+  background-color: #eaecef;
+  text-decoration: none;
+}
+
+/* 維基風格的搜尋框 */
+.wiki-search {
+  display: flex;
+  margin: 1em 0;
+}
+
+.wiki-search-input {
+  border: 1px solid var(--wiki-border-light);
+  padding: 0.4em 0.6em;
+  flex: 1;
+  font-family: inherit;
+}
+
+.wiki-search-button {
+  background-color: var(--wiki-bg-light);
+  border: 1px solid var(--wiki-border-light);
+  border-left: 0;
+  padding: 0 0.8em;
+  cursor: pointer;
+}
+
+.wiki-search-button:hover {
+  background-color: #eaecef;
+}
+
+/* 維基風格的分頁導航 */
+.wiki-pagination {
+  display: flex;
+  justify-content: center;
+  margin: 1.5em 0;
+  gap: 0.5em;
+}
+
+.wiki-pagination-item {
+  padding: 0.3em 0.7em;
+  border: 1px solid var(--wiki-border-light);
+  color: var(--wiki-link);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.wiki-pagination-item:hover {
+  background-color: var(--wiki-bg-light);
+  text-decoration: none;
+}
+
+.wiki-pagination-active {
+  background-color: var(--wiki-bg-light);
+  border: 1px solid var(--wiki-border);
+  font-weight: bold;
+}
+
+/* 維基風格的提示框 */
+.wiki-box {
+  border: 1px solid var(--wiki-border-light);
+  padding: 1em;
+  margin: 1em 0;
+  background-color: var(--wiki-bg-light);
+}
+
+.wiki-box-title {
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+
+.wiki-box-info {
+  border-color: #c8ccd1;
+  background-color: #eaf3ff;
+}
+
+.wiki-box-warning {
+  border-color: #fc3;
+  background-color: #fef6e7;
+}
+
+.wiki-box-error {
+  border-color: #d33;
+  background-color: #fee7e6;
+}
+
+/* Vue Router樣式修正 */
+.router-link-exact-active {
+  font-weight: 500;
+  background-color: var(--wiki-bg-light);
+}
+
+/* 防止導航重複 */
+.wiki-nav {
+  z-index: 1000;
+}

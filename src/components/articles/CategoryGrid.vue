@@ -1,15 +1,10 @@
 <template>
   <div class="w-full wiki-categories">
-    <!-- 維基百科風格分類表格 -->
     <div class="wiki-category-table">
       <table class="wiki-table w-full border-collapse">
         <tbody>
-          <tr v-for="row in categoryRows" :key="row[0]?.name || 'empty'">
-            <td
-              v-for="cat in row"
-              :key="cat?.name || 'empty'"
-              class="wiki-category-cell"
-            >
+          <tr v-for="(row, rowIndex) in categoryRows" :key="rowIndex">
+            <td v-for="(cat, colIndex) in row" :key="colIndex" class="wiki-category-cell">
               <div v-if="cat" class="wiki-category-content">
                 <router-link
                   :to="`/category/${cat.name}`"
@@ -24,7 +19,6 @@
                   {{ cat.count }}+ 條目
                 </div>
               </div>
-              <div v-else style="min-height: 4rem" />
             </td>
           </tr>
         </tbody>
@@ -38,65 +32,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { collection, getDocs, query, where } from 'firebase/firestore'
-import { db } from '@/firebase'
+import { ref, computed, onMounted } from 'vue';
+import { db } from '@/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 interface Category {
-  name: string
-  label: string
-  icon: string
-  count: number
+  name: string;
+  label: string;
+  icon: string;
+  count: number;
 }
 
-const baseCategories: Omit<Category, 'count'>[] = [
-  { name: '登山路線', label: '登山路線', icon: '🗻' },
-  { name: '裝備心得', label: '裝備心得', icon: '🎒' },
-  { name: '登山知識', label: '登山知識', icon: '📚' },
-  { name: '緊急應變', label: '緊急應變', icon: '🚨' },
-  { name: '野外生存', label: '野外生存', icon: '🏕️' },
-  { name: '保育生態', label: '保育生態', icon: '🌱' },
-  { name: '登山飲食', label: '登山飲食', icon: '🍱' },
-  { name: '入門指南', label: '入門指南', icon: '👣' },
-]
+const categories = ref<Category[]>([
+  { name: '登山路線', label: '登山路線', icon: '🗻', count: 0 },
+  { name: '裝備心得', label: '裝備心得', icon: '🎒', count: 0 },
+  { name: '登山知識', label: '登山知識', icon: '📚', count: 0 },
+  { name: '緊急應變', label: '緊急應變', icon: '🚨', count: 0 },
+  { name: '野外生存', label: '野外生存', icon: '🏕️', count: 0 },
+  { name: '保育生態', label: '保育生態', icon: '🌱', count: 0 },
+  { name: '登山飲食', label: '登山飲食', icon: '🍱', count: 0 },
+  { name: '入門指南', label: '入門指南', icon: '👣', count: 0 },
+]);
 
-const categories = ref<Category[]>([])
-
-onMounted(async () => {
-  const result: Category[] = []
-
-  for (const base of baseCategories) {
-    const q = query(
-      collection(db, 'articles'),
-      where('category', '==', base.name),
-      where('status', '==', 'approved')
-    )
-    const snapshot = await getDocs(q)
-    result.push({
-      ...base,
-      count: snapshot.size,
-    })
-  }
-
-  categories.value = result
-})
-
-// 轉為 2D 陣列排版用
-const categoryRows = computed<(Category | null)[][]>(() => {
-  const itemsPerRow = 4
-  const rows: (Category | null)[][] = []
-  const cats = [...categories.value]
+const categoryRows = computed(() => {
+  const itemsPerRow = 4;
+  const rows: (Category | null)[][] = [];
+  const cats = [...categories.value];
 
   while (cats.length % itemsPerRow !== 0) {
-    cats.push(null)
+    cats.push(null);
   }
 
   for (let i = 0; i < cats.length; i += itemsPerRow) {
-    rows.push(cats.slice(i, i + itemsPerRow))
+    rows.push(cats.slice(i, i + itemsPerRow));
   }
 
-  return rows
-})
+  return rows;
+});
+
+onMounted(async () => {
+  for (const category of categories.value) {
+    const q = query(
+      collection(db, 'articles'),
+      where('category', '==', category.name),
+      where('status', '==', 'approved')
+    );
+    const snapshot = await getDocs(q);
+    category.count = snapshot.size;
+  }
+});
 </script>
 
 <style scoped>

@@ -1,55 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { auth } from './firebase'
-import { useNotificationsStore } from './store/notifications'
-import LoginButton from './components/auth/LoginButton.vue'
-
-const notificationsStore = useNotificationsStore()
-
-onMounted(() => {
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      notificationsStore.fetchUnreadCount()
-    }
-  })
-})
+import NavBar from './components/NavBar.vue'
 </script>
 
 <template>
   <div class="min-h-screen wiki-theme">
-    <!-- 導覽列 -->
-    <nav class="w-full border-b border-wiki-border-light bg-wiki-bg">
-      <div class="max-w-5xl mx-auto px-4 py-2 flex justify-between items-center">
-        <!-- Logo -->
-        <router-link to="/" class="flex items-center space-x-2">
-          <div class="text-2xl">🏔️</div>
-          <div class="font-medium text-xl">山林知識庫</div>
-        </router-link>
-
-        <!-- 導覽列項目 -->
-        <div class="flex space-x-1 items-center">
-          <router-link to="/" class="wiki-nav-item">首頁</router-link>
-          <router-link to="/about" class="wiki-nav-item">關於</router-link>
-          <router-link to="/review" class="wiki-nav-item">審核</router-link>
-          <router-link to="/my-articles" class="wiki-nav-item">我的投稿</router-link>
-          <router-link to="/admin" class="wiki-nav-item">管理員</router-link>
-          <router-link to="/notifications" class="wiki-nav-item relative">
-            通知
-            <span
-              v-if="notificationsStore.unreadCount > 0"
-              class="ml-1 text-xs px-1.5 bg-red-50 text-red-600 border border-red-200 rounded"
-            >
-              {{ notificationsStore.unreadCount }}
-            </span>
-          </router-link>
-          <div class="ml-2">
-            <LoginButton />
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <!-- 主內容 -->
+    <NavBar />
     <main class="max-w-6xl mx-auto mt-16 pt-4 px-4">
       <router-view />
     </main>
@@ -57,6 +12,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* 保留原有主樣式，如果需要移到 NavBar.vue 也可以 */
 .wiki-nav-item {
   padding: 0.5rem 0.75rem;
   color: var(--wiki-link);

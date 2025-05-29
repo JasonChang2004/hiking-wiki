@@ -1,160 +1,126 @@
 <template>
-  <div class="wiki-featured">
-    <!-- 骨架屏 -->
-    <div v-if="loading" class="flex flex-col gap-3">
-      <div v-for="i in 3" :key="i" class="animate-pulse">
-        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-        <div class="h-16 bg-gray-200 rounded mb-2"></div>
-        <div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
-      </div>
-    </div>
-
-    <!-- 精選文章 - 維基風格表格 -->
-    <div v-else-if="articles.length">
-      <div class="wiki-featured-grid">
-        <div v-for="(article, index) in articles" :key="article.id" class="wiki-featured-item">
-          <div class="flex flex-col sm:flex-row gap-3">
-            <!-- 小型圖片 -->
-            <div class="sm:w-24 w-full h-20 border border-gray-200 shrink-0 overflow-hidden">
-              <img 
-                :src="`https://source.unsplash.com/300x200/?hiking,mountains,taiwan,${article.id}`" 
-                :alt="article.title"
-                class="w-full h-full object-cover"
-              />
-            </div>
-            
-            <div class="flex-1">
-              <!-- 標題區域 -->
-              <div class="mb-1">
-                <router-link 
-                  :to="`/article/${article.id}`"
-                  class="text-base font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                >
-                  {{ article.title }}
-                </router-link>
-                <span class="text-xs text-gray-500 ml-1">（{{ article.category || '綜合' }}）</span>
-              </div>
-              
-              <!-- 簡短摘要 -->
-              <p class="text-sm text-gray-700 mb-1 line-clamp-2">
-                {{ article.content?.substring(0, 120) + (article.content?.length > 120 ? '...' : '') }}
-              </p>
-              
-              <!-- 元數據 -->
-              <div class="text-xs text-gray-500 italic">
-                <span>{{ article.displayName }}</span>
-                <span class="mx-1">•</span>
-                <span>{{ formatDate(article.createdAt) }}</span>
-              </div>
-            </div>
+  <div class="featured-carousel-container">
+    <h2 class="text-2xl font-bold text-center my-4">精選文章</h2>
+    <div v-if="isLoading" class="text-center">載入中...</div>
+    <div v-if="error" class="text-center text-red-500">{{ error }}</div>
+    <div v-if="!isLoading && !error && articles.length === 0" class="text-center">沒有精選文章</div>
+    <div v-if="!isLoading && !error && articles.length > 0" class="carousel">
+      <div v-for="article in articles" :key="article.id" class="carousel-item">
+        <router-link :to="{ name: 'ArticleDetail', params: { id: article.id } }">
+          <img :src="article.imageUrl || 'https://source.unsplash.com/random/800x600?hiking&' + article.id" alt="Article cover" class="carousel-image"/>
+          <div class="carousel-caption">
+            <h3 class="text-lg font-semibold">{{ article.title }}</h3>
+            <p class="text-sm text-gray-200">作者：{{ article.displayName || '匿名' }}</p>
+            <p class="text-xs text-gray-300">發布於：{{ formatDate(article.createdAt) }}</p>
           </div>
-        </div>
+        </router-link>
       </div>
-    </div>
-    
-    <!-- 空狀態 -->
-    <div v-else class="text-center py-8 border border-gray-200 bg-gray-50">
-      <div class="mb-3 text-3xl">📄</div>
-      <div class="text-gray-700 mb-2">尚無精選文章</div>
-      <div class="text-sm text-gray-500 mb-4">精選內容將定期更新</div>
-      <button class="py-1 px-3 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 transition-colors">
-        投稿文章
-      </button>
-    </div>
-
-    <!-- 說明文字 -->
-    <div class="text-xs text-gray-500 mt-3 italic">
-      本區域內容由編輯團隊精選，每週更新。
     </div>
   </div>
 </template>
 
 <style scoped>
-/* 維基風格的精選內容 */
-.wiki-featured {
-  font-family: 'Liberation Serif', 'Linux Libertine', Georgia, Times, serif;
+.featured-carousel-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
-.wiki-featured-grid {
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  gap: 1.25rem;
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 1rem; /* spacing between items */
+  padding-bottom: 1rem; /* For scrollbar visibility if needed */
 }
 
-@media (min-width: 640px) {
-  .wiki-featured-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .wiki-featured-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.wiki-featured-item {
-  padding: 0.5rem;
-  transition: background-color 0.15s ease;
-}
-
-.wiki-featured-item:hover {
-  background-color: #f8f9fa;
-}
-
-/* 文本截斷 */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2; /* 標準屬性 */
-  -webkit-box-orient: vertical;
+.carousel-item {
+  flex: 0 0 auto; /* Prevent growing/shrinking, auto basis */
+  width: 300px; /* Or your preferred width */
+  scroll-snap-align: start;
+  border-radius: 8px;
   overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.carousel-item:hover {
+  transform: translateY(-5px);
+}
+
+.carousel-image {
+  width: 100%;
+  height: 200px; /* Or your preferred height */
+  object-fit: cover;
+  display: block;
+}
+
+.carousel-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+/* Scrollbar styling (optional) */
+.carousel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.carousel::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+.carousel::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
 }
 </style>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { ref, onMounted } from 'vue';
+import { db } from '@/firebase'; // Corrected import path
+import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
+import type { Article } from '@/types';
+import { formatDate } from '@/utils/formatters';
 
-// 定義文章類型
-interface Article {
-  id: string
-  title: string
-  content: string
-  category?: string
-  displayName: string
-  createdAt: any
-  [key: string]: any
-}
+const articles = ref<Article[]>([]);
+const isLoading = ref(true);
+const error = ref<string | null>(null);
 
-const articles = ref<Article[]>([])
-const loading = ref(true)
-
-onMounted(async () => {
+const fetchFeaturedArticles = async () => {
+  isLoading.value = true;
+  error.value = null;
   try {
+    const articlesCollection = collection(db, 'articles');
+    // Query for articles, order by creation date in descending order, limit to 5
+    // Filter for status 'approved' and isFeatured true.
     const q = query(
-      collection(db, 'articles'),
-      where('isFeatured', '==', true),
-      where('status', '==', 'approved'),
-      orderBy('createdAt', 'desc')
-    )
-    const snapshot = await getDocs(q)
-    articles.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article))
-  } catch (error) {
-    console.error('無法載入精選文章:', error)
-  } finally {
-    loading.value = false
+      articlesCollection, 
+      where('status', '==', 'approved'), 
+      where('isFeatured', '==', true), 
+      orderBy('createdAt', 'desc'), 
+      limit(5)
+    );
+    const querySnapshot = await getDocs(q);
+    articles.value = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt // This might need conversion if not already a string
+    } as Article));
+  } catch (err) {
+    console.error("Error fetching featured articles:", err);
+    error.value = "Failed to load featured articles.";
   }
-})
+  isLoading.value = false;
+};
 
-const formatDate = (ts: any) => {
-  if (!ts) return ''
-  const d = ts?.toDate?.()
-  if (!d) return ''
-  
-  // 更友好的日期格式
-  const options = { year: 'numeric', month: 'short', day: 'numeric' } as Intl.DateTimeFormatOptions
-  return d.toLocaleDateString('zh-TW', options)
-}
+onMounted(() => {
+  fetchFeaturedArticles();
+});
 </script>

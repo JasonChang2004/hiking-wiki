@@ -1,25 +1,20 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
-    './index.html',
-    './src/**/*.{vue,js,ts,jsx,tsx}'
+    "./index.html",
+    "./src/**/*.{vue,js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
-      fontFamily: {
-        wiki: ['"Noto Serif TC"', 'Georgia', 'serif'],
-      },
       colors: {
-        wiki: {
-          bg: '#f9f9f9',
-          text: '#202122',
-          link: '#0645ad',
-          border: '#a2a9b1',
-          bgLight: '#f6f6f6',
-        },
+        'wiki-bg': '#f9fafb',
+        'wiki-border-light': '#e5e7eb',
+        'wiki-link': '#2563eb',
+        'wiki-bg-light': '#f3f4f6',
+      },
+      fontFamily: {
+        sans: ['"Noto Sans TC"', 'sans-serif'],
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
-  darkMode: 'class'
+  plugins: [],
 }

@@ -2,37 +2,47 @@
 import { useRoute } from 'vue-router'
 import { db } from '../firebase'
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { formatDate } from '../utils/formatters'
+import type { Article } from '../types'
 
 const route = useRoute()
-const articles = ref<any[]>([])
+const articles = ref<Article[]>([])
 const loading = ref(true)
+const categoryName = ref(route.params.name as string)
 
-onMounted(async () => {
-  const category = route.params.name as string
-  const q = query(
-    collection(db, 'articles'),
-    where('status', '==', 'approved'),
-    where('category', '==', category),
-    orderBy('createdAt', 'desc')
-  )
-  const snap = await getDocs(q)
-  articles.value = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-  loading.value = false
+const fetchArticlesByCategory = async (category: string) => {
+  loading.value = true
+  try {
+    const q = query(
+      collection(db, 'articles'),
+      where('status', '==', 'approved'),
+      where('category', '==', category),
+      orderBy('createdAt', 'desc')
+    )
+    const snap = await getDocs(q)
+    articles.value = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article))
+  } catch (error) {
+    console.error(`Error fetching articles for category ${category}:`, error)
+    articles.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchArticlesByCategory(categoryName.value)
 })
 
-// 格式化日期
-const formatDate = (ts: any) => {
-  if (!ts) return '';
-  const d = ts?.toDate?.();
-  if (!d) return '';
-  
-  return d.toLocaleDateString('zh-TW', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  });
-}
+watch(
+  () => route.params.name,
+  (newName) => {
+    if (newName) {
+      categoryName.value = newName as string;
+      fetchArticlesByCategory(categoryName.value);
+    }
+  }
+)
 </script>
 
 <template>

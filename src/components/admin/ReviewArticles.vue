@@ -26,8 +26,9 @@
         
         <div class="wiki-card">
           <div class="wiki-card-header">條目摘要</div>
+          <!-- Make sure content is not null or undefined before substring -->
           <div class="text-gray-800 line-clamp-3 mb-2">
-            {{ article.content.substring(0, 200) + (article.content.length > 200 ? '...' : '') }}
+            {{ article.content?.substring(0, 200) + (article.content && article.content.length > 200 ? '...' : '') }}
           </div>
           <router-link :to="`/articles/${article.id}`" target="_blank" class="text-wiki-link hover:underline text-sm">
             查看完整內容
@@ -42,19 +43,18 @@
         <!-- 審核操作 -->
         <div class="mt-4 flex gap-3 items-center">
           <button 
-            @click="updateStatus(article.id, 'approved')" 
+            @click="updateStatus(article, 'approved')" 
             class="wiki-button"
           >
             核准文章
           </button>
           <button 
-            @click="updateStatus(article.id, 'rejected')" 
+            @click="updateStatus(article, 'rejected')" 
             class="wiki-button"
           >
             拒絕文章
           </button>
           
-          <!-- 審核評論（可選功能） -->
           <input 
             v-model="reviewComments[article.id]"
             class="wiki-input ml-2 flex-1"
@@ -68,61 +68,70 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
-import { db } from '../../firebase'
-import { collection, getDocs, query, where, updateDoc, doc, Timestamp } from 'firebase/firestore'
+import { db } from '@/firebase' // Correct path for firebase
+import { collection, getDocs, query, where, updateDoc, doc, Timestamp, addDoc, orderBy } from 'firebase/firestore' // Added orderBy
+import { formatDate } from '@/utils/formatters' // Use new formatter
+import type { Article } from '@/types' // Use new type
 
-const articles = ref<any[]>([])
+const articles = ref<Article[]>([])
 const loading = ref(true)
 const reviewComments = reactive<Record<string, string>>({})
 
 const loadArticles = async () => {
-  const q = query(collection(db, 'articles'), where('status', '==', 'pending'))
-  const snapshot = await getDocs(q)
-  articles.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-  loading.value = false
+  loading.value = true;
+  try {
+    const q = query(collection(db, 'articles'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(q)
+    articles.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article))
+  } catch (error) {
+    console.error("Error loading articles for review:", error);
+    articles.value = [];
+  } finally {
+    loading.value = false
+  }
 }
 
-const updateStatus = async (id: string, status: string) => {
+const updateStatus = async (article: Article, newStatus: 'approved' | 'rejected') => {
   try {
-    const ref = doc(db, 'articles', id)
+    const articleRef = doc(db, 'articles', article.id)
     const updateData: any = { 
-      status,
-      reviewedAt: Timestamp.now()
+      status: newStatus,
+      reviewedAt: Timestamp.now() // Use Firestore Timestamp
     }
     
-    // 如果有審核意見，也一併更新
-    if (reviewComments[id]) {
-      updateData.reviewComment = reviewComments[id]
+    const comment = reviewComments[article.id]
+    if (comment) {
+      updateData.reviewComment = comment
     }
     
-    await updateDoc(ref, updateData)
+    await updateDoc(articleRef, updateData)
     
-    const resultText = status === 'approved' ? '核准' : '拒絕'
-    alert(`文章已${resultText}`)
+    // Send notification
+    try {
+      await addDoc(collection(db, 'notifications'), {
+        uid: article.uid,
+        message: `您的文章「${article.title}」已${newStatus === 'approved' ? '通過審核' : '被拒絕'}${comment ? '，審核意見：' + comment : ''}`,
+        type: newStatus === 'approved' ? 'article_approved' : 'article_rejected',
+        read: false,
+        createdAt: Timestamp.now(), // Use Firestore Timestamp
+        articleId: article.id
+      });
+    } catch (notificationError) {
+      console.error("Error sending notification:", notificationError);
+      // Decide if the main operation should be considered failed or just log this
+    }
+
+    alert(`文章已${newStatus === 'approved' ? '核准' : '拒絕'}`)
     
-    // 清除該文章的評論
-    delete reviewComments[id]
-    
-    // 重新載入審核列表
-    await loadArticles()
+    delete reviewComments[article.id]
+    await loadArticles() // Reload the list
   } catch (error) {
     console.error('更新狀態時發生錯誤:', error)
     alert('操作失敗，請稍後再試')
   }
 }
 
-// 格式化日期
-const formatDate = (ts: any) => {
-  if (!ts) return '';
-  const d = ts?.toDate?.();
-  if (!d) return '';
-  
-  return d.toLocaleDateString('zh-TW', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  });
-}
+// formatDate is now imported
 
 onMounted(() => {
   loadArticles()

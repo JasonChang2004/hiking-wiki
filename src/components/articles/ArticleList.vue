@@ -99,21 +99,23 @@
 import { ref, computed, onMounted } from 'vue'
 import { db } from '../../firebase'
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { formatDate } from '../../utils/formatters' // 使用新的格式化工具
+import type { Article } from '../../types' // 使用新的型別定義
 
-const articles = ref<any[]>([])
+const articles = ref<Article[]>([])
 const loading = ref(true)
 const search = ref('')
 const selectedCategory = ref('')
 
-// 自訂分類清單
+// 自訂分類清單 - 考慮是否可以從其他地方（例如 Firestore 或設定檔）動態獲取
 const categories = ['百岳', '郊山', '海外', '裝備']
 
 const filteredArticles = computed(() => {
   const keyword = search.value.toLowerCase()
   return articles.value.filter(article => {
     const matchSearch =
-      article.title?.toLowerCase().includes(keyword) ||
-      article.content?.toLowerCase().includes(keyword)
+      (article.title?.toLowerCase() || '').includes(keyword) || // 增加 null/undefined 檢查
+      (article.content?.toLowerCase() || '').includes(keyword) // 增加 null/undefined 檢查
     const matchCategory =
       !selectedCategory.value || article.category === selectedCategory.value
     return matchSearch && matchCategory
@@ -121,26 +123,24 @@ const filteredArticles = computed(() => {
 })
 
 onMounted(async () => {
-  const q = query(
-    collection(db, 'articles'),
-    where('status', '==', 'approved'),
-    orderBy('createdAt', 'desc')
-  )
-  const snapshot = await getDocs(q)
-  articles.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-  loading.value = false
+  loading.value = true // 確保 loading 狀態被設定
+  try {
+    const q = query(
+      collection(db, 'articles'),
+      where('status', '==', 'approved'),
+      orderBy('createdAt', 'desc')
+      // Consider adding limit() for pagination if list becomes very long
+      // limit(10) 
+    )
+    const snapshot = await getDocs(q)
+    articles.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article))
+  } catch (error) {
+    console.error("Error loading articles:", error);
+    // Optionally, set an error state to display a message to the user
+  } finally {
+    loading.value = false
+  }
 })
-
-// 格式化日期顯示
-const formatDate = (ts: any) => {
-  if (!ts) return ''
-  const d = ts?.toDate?.()
-  if (!d) return ''
-  
-  // 更友好的日期格式
-  const options = { year: 'numeric', month: 'short', day: 'numeric' } as Intl.DateTimeFormatOptions
-  return d.toLocaleDateString('zh-TW', options)
-}
 </script>
 
 <style scoped>

@@ -1,5 +1,5 @@
 <template>
-  <div class="wiki-theme max-w-4xl mx-auto">
+  <div class="notifications-container p-4">
     <!-- 維基風格頁面標題 -->
     <h1 class="text-3xl font-normal border-b border-wiki-border-light pb-2 mb-4">
       通知中心
@@ -62,7 +62,7 @@
             
             <!-- 時間 -->
             <td class="py-2 px-3 border border-wiki-border-light text-sm text-gray-600">
-              {{ formatDate(note.createdAt) }}
+              {{ formatDateTime(note.createdAt) }}
             </td>
             
             <!-- 標記為已讀 -->
@@ -70,7 +70,7 @@
               <button
                 v-if="!note.read"
                 class="text-wiki-link hover:underline text-sm"
-                @click="markAsRead(note)"
+                @click="markAsRead(note.id)"
                 title="標記為已讀"
               >
                 標為已讀
@@ -90,24 +90,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { db, auth } from '../firebase'
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  doc,
-  updateDoc
-} from 'firebase/firestore'
+import { ref, onMounted, onUnmounted } from 'vue';
+import { db } from '@/firebase';
+import { collection, query, where, onSnapshot, orderBy, writeBatch, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { getAuth, type Unsubscribe as AuthUnsubscribe, type User } from 'firebase/auth';
+import type { NotificationMessage } from '@/types';
+import { formatDateTime } from '@/utils/formatters';
+import { useNotificationsStore } from '@/store/notifications';
 
-import { useNotificationsStore } from '../store/notifications'
-
-const notificationsStore = useNotificationsStore()
-const notifications = ref<any[]>([])
-const loading = ref(true)
+const notifications = ref<NotificationMessage[]>([]);
+const loading = ref(true);
 const updateNotification = ref(false)
+const currentUser = ref<User | null>(null)
+const error = ref<string | null>(null)
+const auth = getAuth()
+const notificationStore = useNotificationsStore();
+
+let firestoreUnsubscribe: (() => void) | null = null
+let authListenerUnsubscribe: AuthUnsubscribe | null = null
 
 // 根據通知類型返回適當的圖標
 const getNotificationIcon = (type: string) => {
@@ -149,107 +149,107 @@ const getNotificationTypeText = (type: string) => {
   }
 }
 
-const loadNotifications = async () => {
-  try {
-    loading.value = true
-    const user = auth.currentUser
-    if (!user) {
-      notifications.value = []
-      return
-    }
-
-    const q = query(
-      collection(db, 'notifications'),
-      where('uid', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    )
-    const snapshot = await getDocs(q)
-    notifications.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-    await notificationsStore.fetchUnreadCount()  // 同步紅點數
-  } catch (error) {
-    console.error('無法載入通知:', error)
-  } finally {
+const fetchNotifications = () => {
+  if (!currentUser.value) {
+    notifications.value = []
     loading.value = false
+    notificationStore.resetUnread();
+    return
   }
+
+  loading.value = true
+  error.value = null
+
+  const uid = currentUser.value.uid // Safe access after null check
+
+  const notificationsCollection = collection(db, 'notifications')
+  const q = query(
+    notificationsCollection,
+    where('uid', '==', uid),
+    orderBy('createdAt', 'desc')
+  )
+
+  // 移除先前的監聽器（如果存在）
+  if (firestoreUnsubscribe) {
+    firestoreUnsubscribe()
+  }
+
+  firestoreUnsubscribe = onSnapshot(q, (querySnapshot) => {
+    const newNotifications: NotificationMessage[] = []
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      newNotifications.push({
+        id: doc.id,
+        // Ensure createdAt is handled correctly, it might be a Timestamp object
+        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
+        ...data,
+      } as NotificationMessage)
+    })
+    notifications.value = newNotifications
+    // 根據未讀消息更新商店計數
+    const unread = newNotifications.filter(n => !n.read).length;
+    notificationStore.unreadCount = unread; // Directly set if possible, or use a dedicated setter method in store.
+
+    loading.value = false
+  }, (err) => {
+    console.error("Error fetching notifications:", err)
+    error.value = "無法載入通知"
+    loading.value = false
+  })
 }
 
-const markAsRead = async (note: any) => {
+const markAsRead = async (notificationId: string) => {
   try {
-    await updateDoc(doc(db, 'notifications', note.id), { read: true })
-    await loadNotifications()
-    
-    // 顯示確認通知
-    updateNotification.value = true
-    setTimeout(() => {
-      updateNotification.value = false
-    }, 2000)
-  } catch (error) {
-    console.error('無法標記為已讀:', error)
+    const notificationRef = doc(db, 'notifications', notificationId)
+    await updateDoc(notificationRef, { read: true })
+    const index = notifications.value.findIndex(n => n.id === notificationId)
+    if (index !== -1 && !notifications.value[index].read) { // Check if it was unread before
+      notifications.value[index].read = true
+      notificationStore.decrementUnreadCount(); // Use store method
+    }
+  } catch (err) {
+    console.error("Error marking notification as read:", err)
   }
 }
 
 const markAllAsRead = async () => {
-  const user = auth.currentUser
-  if (!user) return
+  if (!currentUser.value || notifications.value.filter(n => !n.read).length === 0) return
+
+  const batch = writeBatch(db)
+  let countDecremented = 0
+  notifications.value.forEach(notification => {
+    if (!notification.read) {
+      const notificationRef = doc(db, 'notifications', notification.id)
+      batch.update(notificationRef, { read: true })
+      countDecremented++
+    }
+  })
 
   try {
-    const q = query(
-      collection(db, 'notifications'),
-      where('uid', '==', user.uid),
-      where('read', '==', false)
-    )
-    const snapshot = await getDocs(q)
-    
-    if (snapshot.docs.length === 0) return
-    
-    for (const docSnap of snapshot.docs) {
-      await updateDoc(doc(db, 'notifications', docSnap.id), { read: true })
-    }
-    
-    await loadNotifications()
-    
-    // 顯示確認通知
-    updateNotification.value = true
-    setTimeout(() => {
-      updateNotification.value = false
-    }, 2000)
-  } catch (error) {
-    console.error('無法標記全部為已讀:', error)
+    await batch.commit()
+    notifications.value.forEach(n => n.read = true)
+    notificationStore.decrementUnreadCount(countDecremented); // Decrement by the actual number marked read
+  } catch (err) {
+    console.error("Error marking all notifications as read:", err)
   }
 }
 
-const formatDate = (ts: any) => {
-  if (!ts) return ''
-  
-  const d = ts?.toDate?.()
-  if (!d) return ''
-  
-  // 如果是今天的日期，只顯示時間
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const notificationDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  
-  if (notificationDate.getTime() === today.getTime()) {
-    return `今天 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
-  } 
-  
-  // 昨天
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  if (notificationDate.getTime() === yesterday.getTime()) {
-    return `昨天 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
-  }
-  
-  // 當年的其它日期顯示月和日
-  if (d.getFullYear() === now.getFullYear()) {
-    return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
-  }
-  
-  // 跨年顯示完整日期
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
-}
+onMounted(() => {
+  authListenerUnsubscribe = auth.onAuthStateChanged(user => {
+    currentUser.value = user // This assignment should be fine now with explicit typing
+    fetchNotifications() // 當身份驗證狀態改變時獲取通知
+  })
+})
 
-onMounted(loadNotifications)
+onUnmounted(() => {
+  if (firestoreUnsubscribe) {
+    firestoreUnsubscribe()
+  }
+  if (authListenerUnsubscribe) {
+    authListenerUnsubscribe()
+  }
+})
+
 </script>
 
 <style scoped>
@@ -299,5 +299,10 @@ onMounted(loadNotifications)
 
 .animate-slide-up {
   animation: slideUp 0.3s ease forwards;
+}
+
+.notifications-container {
+  max-width: 600px;
+  margin: 0 auto;
 }
 </style>

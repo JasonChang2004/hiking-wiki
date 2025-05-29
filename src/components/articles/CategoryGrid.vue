@@ -1,6 +1,9 @@
 <template>
   <div class="w-full wiki-categories">
-    <div class="wiki-category-table">
+    <div v-if="loadingCounts" class="text-center py-4 text-gray-500">
+      正在載入分類統計...
+    </div>
+    <div v-else class="wiki-category-table">
       <table class="wiki-table w-full border-collapse">
         <tbody>
           <tr v-for="(row, rowIndex) in categoryRows" :key="rowIndex">
@@ -24,7 +27,6 @@
         </tbody>
       </table>
     </div>
-
     <div class="mt-5 text-xs text-gray-500 border-t border-gray-200 pt-3">
       類別索引包含所有登山知識庫中的主題分類。點擊類別名稱可瀏覽該類別下的所有文章。
     </div>
@@ -33,52 +35,63 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { db } from '@/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/firebase'; // Corrected path
+import { collection, query, where, getCountFromServer } from 'firebase/firestore'; // Removed getDocs, getCountFromServer is used
+import type { CategoryItem } from '@/types'; // Corrected path to types
 
-interface Category {
-  name: string;
-  label: string;
-  icon: string;
-  count: number;
-}
+// Initial categories - consider making this configurable or fetched
+const categories = ref<CategoryItem[]>(
+  [
+    { name: '登山路線', label: '登山路線', icon: '🗻', count: 0 },
+    { name: '裝備心得', label: '裝備心得', icon: '🎒', count: 0 },
+    { name: '登山知識', label: '登山知識', icon: '📚', count: 0 },
+    { name: '緊急應變', label: '緊急應變', icon: '🚨', count: 0 },
+    { name: '野外生存', label: '野外生存', icon: '🏕️', count: 0 },
+    { name: '保育生態', label: '保育生態', icon: '🌱', count: 0 },
+    { name: '登山飲食', label: '登山飲食', icon: '🍱', count: 0 },
+    { name: '入門指南', label: '入門指南', icon: '👣', count: 0 },
+  ]
+);
 
-const categories = ref<Category[]>([
-  { name: '登山路線', label: '登山路線', icon: '🗻', count: 0 },
-  { name: '裝備心得', label: '裝備心得', icon: '🎒', count: 0 },
-  { name: '登山知識', label: '登山知識', icon: '📚', count: 0 },
-  { name: '緊急應變', label: '緊急應變', icon: '🚨', count: 0 },
-  { name: '野外生存', label: '野外生存', icon: '🏕️', count: 0 },
-  { name: '保育生態', label: '保育生態', icon: '🌱', count: 0 },
-  { name: '登山飲食', label: '登山飲食', icon: '🍱', count: 0 },
-  { name: '入門指南', label: '入門指南', icon: '👣', count: 0 },
-]);
+const loadingCounts = ref(true);
 
 const categoryRows = computed(() => {
-  const itemsPerRow = 4;
-  const rows: (Category | null)[][] = [];
-  const cats = [...categories.value];
+  const itemsPerRow = 4; // Or make this responsive
+  const rows: (CategoryItem | null)[][] = [];
+  // Create a copy to avoid modifying the original ref array directly if not intended
+  const catsProcessed: (CategoryItem | null)[] = [...categories.value]; // Explicitly type catsProcessed
 
-  while (cats.length % itemsPerRow !== 0) {
-    cats.push(null);
+  while (catsProcessed.length % itemsPerRow !== 0) {
+    catsProcessed.push(null); // Pad with null for even rows
   }
 
-  for (let i = 0; i < cats.length; i += itemsPerRow) {
-    rows.push(cats.slice(i, i + itemsPerRow));
+  for (let i = 0; i < catsProcessed.length; i += itemsPerRow) {
+    rows.push(catsProcessed.slice(i, i + itemsPerRow));
   }
-
   return rows;
 });
 
 onMounted(async () => {
-  for (const category of categories.value) {
-    const q = query(
-      collection(db, 'articles'),
-      where('category', '==', category.name),
-      where('status', '==', 'approved')
-    );
-    const snapshot = await getDocs(q);
-    category.count = snapshot.size;
+  loadingCounts.value = true;
+  try {
+    const categoryPromises = categories.value.map(async (category) => {
+      const q = query(
+        collection(db, 'articles'),
+        where('category', '==', category.name),
+        where('status', '==', 'approved')
+      );
+      // Use getCountFromServer for more efficient counting if only count is needed
+      const snapshot = await getCountFromServer(q);
+      return { ...category, count: snapshot.data().count };
+    });
+
+    const updatedCategories = await Promise.all(categoryPromises);
+    categories.value = updatedCategories;
+  } catch (error) {
+    console.error('Error loading category counts:', error);
+    // Handle error, e.g., show a message or leave counts as 0
+  } finally {
+    loadingCounts.value = false;
   }
 });
 </script>

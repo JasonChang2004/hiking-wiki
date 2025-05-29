@@ -4,9 +4,11 @@ import { useRoute } from 'vue-router'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { marked } from 'marked'
+import { formatDateTime } from '../utils/formatters' // 使用新的 formatDateTime
+import type { Article } from '../types' // 使用新的型別定義
 
 const route = useRoute()
-const article = ref<any | null>(null)
+const article = ref<Article | null>(null)
 const loading = ref(true)
 const shareNotification = ref(false)
 
@@ -14,25 +16,11 @@ const renderedHtml = computed(() => {
   if (!article.value?.content) return '';
   
   // 簡單使用 marked 解析
+  // 考慮增加 DOMPurify 來清理 HTML，防止 XSS
+  // import DOMPurify from 'dompurify';
+  // return DOMPurify.sanitize(marked.parse(article.value.content));
   return marked.parse(article.value.content);
 });
-
-// 格式化日期顯示
-const formatDate = (ts: any) => {
-  if (!ts) return '';
-  const d = ts?.toDate?.();
-  if (!d) return '';
-  
-  const options = { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  } as Intl.DateTimeFormatOptions;
-  
-  return d.toLocaleDateString('zh-TW', options);
-}
 
 // 複製分享連結
 const copyShareLink = () => {
@@ -46,23 +34,22 @@ const copyShareLink = () => {
 }
 
 onMounted(async () => {
+  loading.value = true; // 確保 loading 狀態被設定
   try {
     const id = route.params.id as string
     const docRef = doc(db, 'articles', id)
     const snap = await getDoc(docRef)
 
     if (snap.exists()) {
-      // 擴充數據，添加文章 ID
-      article.value = { 
-        id, 
-        ...snap.data() 
-      };
+      article.value = { id, ...snap.data() } as Article;
     } else {
       article.value = null
+      console.warn("Article not found:", id); // Log a warning if article doesn't exist
     }
   } catch (error) {
     console.error('無法載入文章:', error);
     article.value = null;
+    // Optionally, set an error state to display a message to the user
   } finally {
     loading.value = false
   }
@@ -109,7 +96,7 @@ onMounted(async () => {
           
           <!-- 發布時間 -->
           <div>
-            <span>發布於: {{ formatDate(article.createdAt) }}</span>
+            <span>發布於: {{ formatDateTime(article.createdAt) }}</span>
           </div>
         </div>
       </div>
@@ -128,7 +115,7 @@ onMounted(async () => {
         <!-- 維基風格的工具區 -->
         <div class="flex-1">
           <div class="wiki-notice text-sm">
-            本文由登山知識社群成員撰寫，最後更新於 {{ formatDate(article.updatedAt || article.createdAt) }}
+            本文由登山知識社群成員撰寫，最後更新於 {{ formatDateTime(article.updatedAt || article.createdAt) }}
           </div>
         </div>
       </div>

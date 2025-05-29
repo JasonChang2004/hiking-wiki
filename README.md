@@ -11,14 +11,19 @@
 
 ### 🔸 `src/components/`
 
-- `ArticleList.vue`：文章清單元件（含搜尋功能）
-- `HelloWorld.vue`：預設 Vue 樣板
-- `LoginButton.vue`：登入/登出按鈕，顯示頭像與名稱
-- `ReviewArticles.vue`：審核文章頁（規劃中）
-- `SubmitArticle.vue`：投稿表單，支援 Markdown 編輯與即時預覽
-- `FeaturedCarousel.vue`：精選文章輪播（顯示 `isFeatured = true` 條目）
-- `CategoryGrid.vue`：分類導覽按鈕區塊（如登山路線、裝備心得等）
-- `UserGreeting.vue`：首頁歡迎語元件（登入者顯示打招呼）
+- **`admin/`**
+  - `ReviewArticles.vue`：審核文章頁（規劃中）
+- **`articles/`**
+  - `ArticleList.vue`：文章清單元件（含搜尋功能）
+  - `CategoryGrid.vue`：分類導覽按鈕區塊（如登山路線、裝備心得等）
+  - `SubmitArticle.vue`：投稿表單，支援 Markdown 編輯與即時預覽
+- **`auth/`**
+  - `LoginButton.vue`：登入/登出按鈕，顯示頭像與名稱
+- **`common/`**
+  - `UserGreeting.vue`：首頁歡迎語元件（登入者顯示打招呼）
+- **`layout/`**
+  - `FeaturedCarousel.vue`：精選文章輪播（顯示 `isFeatured = true` 條目）
+  - `NavBar.vue`：導覽列元件
 
 ### 🔸 `src/firebase/`
 

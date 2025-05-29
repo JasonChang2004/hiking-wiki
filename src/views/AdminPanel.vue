@@ -1,136 +1,146 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue';
 import {
   collection,
   getDocs,
   updateDoc,
   addDoc,
   doc,
-  collection as col
-} from 'firebase/firestore'
-import { db } from '../firebase'
-import { grantAdminRole, revokeAdminRole } from '../firebase/functions'
-import { auth } from '../firebase'
+  Timestamp,
+  query,
+  orderBy
+} from 'firebase/firestore';
+import { db, auth } from '@/firebase';
+import { grantAdminRole, revokeAdminRole } from '@/firebase/functions';
+import type { UserProfile, Article } from '@/types';
+import { formatDate } from '@/utils/formatters'; // Re-added formatDate
 
-const admins = ref<UserInfo[]>([])
-const nonAdmins = ref<UserInfo[]>([])
-const articles = ref<ArticleInfo[]>([])
-const loading = ref(true)
-const updatingUid = ref<string | null>(null)
-const currentUid = ref<string | null>(null)
+const admins = ref<UserProfile[]>([]);
+const nonAdmins = ref<UserProfile[]>([]);
+const articles = ref<Article[]>([]);
+const loadingUsers = ref(true);
+const loadingArticles = ref(true);
+const updatingUid = ref<string | null>(null);
+const currentUid = ref<string | null>(null); // This is assigned but not used for any logic, consider removing if not needed
 
 const loadUsers = async () => {
-  loading.value = true
-  const allDocs = await getDocs(collection(db, 'users'))
-  const allUsers = allDocs.docs.map(d => ({
-    id: d.id,
-    ...(d.data() as Omit<UserInfo, 'id'>)
-  })) as UserInfo[]
-  admins.value = allUsers.filter(u => u.isAdmin)
-  nonAdmins.value = allUsers.filter(u => !u.isAdmin)
-  loading.value = false
-}
+  loadingUsers.value = true;
+  try {
+    const allDocs = await getDocs(collection(db, 'users'));
+    const usersData = allDocs.docs.map(d => ({
+      id: d.id,
+      ...(d.data() as Omit<UserProfile, 'id'>)
+    })) as UserProfile[];
+    admins.value = usersData.filter(u => u.isAdmin);
+    nonAdmins.value = usersData.filter(u => !u.isAdmin);
+  } catch (error) {
+    console.error("Error loading users:", error);
+  } finally {
+    loadingUsers.value = false;
+  }
+};
 
 const loadArticles = async () => {
-  const allDocs = await getDocs(collection(db, 'articles'))
-  articles.value = allDocs.docs.map(d => ({
-    id: d.id,
-    ...(d.data() as Omit<ArticleInfo, 'id'>)
-  }))
-}
-
-const inviteAdmin = async (uid: string) => {
-  if (updatingUid.value) return
-  updatingUid.value = uid
+  loadingArticles.value = true;
   try {
-    await grantAdminRole(uid)
-    alert('已設為管理員！')
-    await loadUsers()
-  } catch (e: any) {
-    alert(e.message || '設定失敗')
+    const q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'));
+    const allDocs = await getDocs(q);
+    articles.value = allDocs.docs.map(d => ({
+      id: d.id,
+      ...(d.data() as Omit<Article, 'id'>)
+    })) as Article[]; // Ensure type assertion for the whole object array
+  } catch (error) {
+    console.error("Error loading articles:", error);
+  } finally {
+    loadingArticles.value = false;
   }
-  updatingUid.value = null
-}
+};
 
-const demoteAdmin = async (uid: string) => {
-  if (updatingUid.value) return
-  updatingUid.value = uid
+const toggleAdmin = async (user: UserProfile) => {
+  if (updatingUid.value) return;
+
+  updatingUid.value = user.id;
   try {
-    await revokeAdminRole(uid)
-    alert('已降為一般用戶')
-    await loadUsers()
+    if (user.isAdmin) {
+      await revokeAdminRole(user.id);
+      alert('已降為一般用戶');
+    } else {
+      await grantAdminRole(user.id);
+      alert('已設為管理員！');
+    }
+    await loadUsers(); // Reload user list
   } catch (e: any) {
-    alert(e.message || '操作失敗')
+    alert(e.message || '操作失敗');
+    console.error("Error toggling admin role:", e);
   }
-  updatingUid.value = null
-}
+  updatingUid.value = null;
+};
 
-const toggleAdmin = (user: UserInfo) => {
-  if (user.isAdmin) {
-    demoteAdmin(user.id)
-  } else {
-    inviteAdmin(user.id)
+const toggleStatus = async (article: Article) => {
+  const articleRef = doc(db, 'articles', article.id);
+  const newStatus = article.status === 'approved' ? 'pending' : 'approved';
+  try {
+    await updateDoc(articleRef, { status: newStatus, reviewedAt: Timestamp.now() });
+
+    await addDoc(collection(db, 'notifications'), {
+      uid: article.uid,
+      message: newStatus === 'approved'
+        ? `您的文章「${article.title}」已通過審核 🎉`
+        : `您的文章「${article.title}」已被管理員退回為「待審核」狀態。`,
+      type: newStatus === 'approved' ? 'article_approved' : 'status_changed', // Corrected type for pending
+      read: false,
+      createdAt: Timestamp.now(),
+      articleId: article.id
+    });
+
+    alert('狀態已更新，並發送通知');
+    const index = articles.value.findIndex(a => a.id === article.id);
+    if (index !== -1) {
+      articles.value[index].status = newStatus;
+      articles.value[index].reviewedAt = Timestamp.now().toDate(); // Update reviewedAt locally
+    }
+  } catch (error) {
+    console.error("Error toggling article status:", error);
+    alert("更新文章狀態失敗");
   }
-}
+};
 
-const toggleStatus = async (article: ArticleInfo) => {
-  const ref = doc(db, 'articles', article.id)
-  const newStatus = article.status === 'approved' ? 'pending' : 'approved'
-  await updateDoc(ref, { status: newStatus })
+const toggleFeatured = async (article: Article) => {
+  const articleRef = doc(db, 'articles', article.id);
+  const newFeaturedStatus = !article.isFeatured;
+  try {
+    await updateDoc(articleRef, {
+      isFeatured: newFeaturedStatus
+    });
+    alert('精選狀態已更新');
+    const index = articles.value.findIndex(a => a.id === article.id);
+    if (index !== -1) {
+      articles.value[index].isFeatured = newFeaturedStatus;
+    }
+  } catch (error) {
+    console.error("Error toggling featured status:", error);
+    alert("更新精選狀態失敗");
+  }
+};
 
-  // 寫入通知
-  await addDoc(col(db, 'notifications'), {
-    uid: article.uid,
-    message: newStatus === 'approved'
-      ? `你的文章「${article.title}」已通過審核 🎉`
-      : `你的文章「${article.title}」被退回為「待審核」`,
-    type: 'status',
-    read: false,
-    createdAt: new Date(),
-  })
-
-  alert('狀態已更新，並發送通知')
-  await loadArticles()
-}
-
-const toggleFeatured = async (article: ArticleInfo) => {
-  const ref = doc(db, 'articles', article.id)
-  await updateDoc(ref, {
-    isFeatured: !article.isFeatured
-  })
-  alert('精選狀態已更新')
-  await loadArticles()
-}
+let authUnsubscribe: (() => void) | null = null; // For unsubscribing
 
 onMounted(() => {
-  loadUsers()
-  loadArticles()
-  if (auth.currentUser) {
-    currentUid.value = auth.currentUser.uid
-  } else {
-    auth.onAuthStateChanged((user) => {
-      if (user) currentUid.value = user.uid
-    })
+  loadUsers();
+  loadArticles();
+  const authInstance = auth; // Use the imported auth directly
+  currentUid.value = authInstance.currentUser ? authInstance.currentUser.uid : null;
+  authUnsubscribe = authInstance.onAuthStateChanged((user) => {
+    currentUid.value = user ? user.uid : null;
+  });
+});
+
+onUnmounted(() => {
+  if (authUnsubscribe) {
+    authUnsubscribe();
   }
-})
+});
 
-interface UserInfo {
-  id: string
-  displayName?: string
-  email?: string
-  isAdmin?: boolean
-}
-
-interface ArticleInfo {
-  id: string
-  title: string
-  content: string
-  category?: string
-  displayName?: string
-  createdAt?: any
-  status: 'pending' | 'approved' | 'rejected'
-  isFeatured?: boolean
-}
 </script>
 
 <template>
@@ -141,20 +151,25 @@ interface ArticleInfo {
     <section>
       <h2 class="text-xl font-semibold mb-2">👑 管理員帳號</h2>
       <p class="text-sm text-gray-500 mb-4">可切換使用者的管理權限</p>
-      <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div v-if="loadingUsers" class="text-center">載入使用者中...</div>
+      <div v-else class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
         <div
           v-for="user in [...admins, ...nonAdmins]"
           :key="user.id"
           class="p-4 bg-white rounded shadow space-y-2"
         >
-          <p class="font-semibold">{{ user.displayName }}</p>
-          <p class="text-sm text-gray-600">{{ user.email }}</p>
+          <p class="font-semibold">{{ user.displayName || 'N/A' }}</p>
+          <p class="text-sm text-gray-600">{{ user.email || 'N/A' }}</p>
+          <p class="text-xs text-gray-400">UID: {{ user.id }}</p>
           <button
-            class="px-3 py-1 text-sm rounded"
-            :class="user.isAdmin ? 'bg-red-500 text-white' : 'bg-green-500 text-white'"
+            class="px-3 py-1 text-sm rounded w-full disabled:opacity-50"
+            :class="user.isAdmin ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'"
             @click="toggleAdmin(user)"
+            :disabled="updatingUid === user.id || currentUid === user.id"
           >
-            {{ user.isAdmin ? '取消管理員' : '設為管理員' }}
+            <span v-if="updatingUid === user.id">處理中...</span>
+            <span v-else-if="currentUid === user.id">{{ user.isAdmin ? '無法取消自己' : '無法設自己' }}</span>
+            <span v-else>{{ user.isAdmin ? '取消管理員' : '設為管理員' }}</span>
           </button>
         </div>
       </div>
@@ -164,39 +179,60 @@ interface ArticleInfo {
     <section>
       <h2 class="text-xl font-semibold mt-10 mb-2">📝 文章管理</h2>
       <p class="text-sm text-gray-500 mb-4">你可以變更精選與審核狀態</p>
-      <div class="space-y-4">
+      <div v-if="loadingArticles" class="text-center">載入文章中...</div>
+      <div v-else class="space-y-4">
         <div
           v-for="article in articles"
           :key="article.id"
-          class="p-4 bg-gray-50 rounded border flex flex-col gap-1"
+          class="p-4 bg-gray-50 rounded border flex flex-col gap-2"
         >
-          <div class="flex justify-between items-center">
+          <div class="flex justify-between items-start">
             <div>
-              <h3 class="font-semibold">{{ article.title }}</h3>
+              <h3 class="font-semibold text-lg">{{ article.title }}</h3>
               <p class="text-sm text-gray-600">
-                by {{ article.displayName }} / {{ article.category }}
+                作者: {{ article.displayName || '匿名' }} | 分類: {{ article.category }}
+              </p>
+              <p class="text-xs text-gray-500">
+                建立於: {{ formatDate(article.createdAt) }} |
+                狀態: <span :class="{
+                  'text-green-600': article.status === 'approved',
+                  'text-yellow-600': article.status === 'pending',
+                  'text-red-600': article.status === 'rejected'
+                }">{{ article.status }}</span>
+                <span v-if="article.reviewedAt"> | 審核於: {{ formatDate(article.reviewedAt) }}</span>
               </p>
             </div>
-            <router-link :to="`/article/${article.id}`" class="text-blue-500 text-sm">檢視</router-link>
+            <router-link :to="`/article/${article.id}`" class="text-blue-500 hover:text-blue-700 text-sm whitespace-nowrap ml-4">檢視文章</router-link>
           </div>
-          <div class="flex gap-2 mt-2">
+          <div class="flex gap-2 mt-2 items-center">
             <button
-              class="px-2 py-1 text-sm rounded"
-              :class="article.status === 'approved' ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white'"
+              class="px-3 py-1.5 text-sm rounded font-medium"
+              :class="article.status === 'approved' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'"
               @click="toggleStatus(article)"
             >
               {{ article.status === 'approved' ? '退回審核' : '通過審核' }}
             </button>
             <button
-              class="px-2 py-1 text-sm rounded"
-              :class="article.isFeatured ? 'bg-gray-500 text-white' : 'bg-indigo-600 text-white'"
+              class="px-3 py-1.5 text-sm rounded font-medium"
+              :class="article.isFeatured ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'bg-indigo-500 hover:bg-indigo-600 text-white'"
               @click="toggleFeatured(article)"
             >
               {{ article.isFeatured ? '取消精選' : '設為精選' }}
             </button>
+            <span v-if="article.isFeatured" class="text-xs text-indigo-600 ml-2">✨ 精選中</span>
           </div>
+        </div>
+        <div v-if="!loadingArticles && articles.length === 0" class="text-center text-gray-500 py-4">
+          沒有需要管理的文章。
         </div>
       </div>
     </section>
   </div>
 </template>
+
+<style scoped>
+/* Add any additional styling if needed */
+button:disabled {
+  cursor: not-allowed;
+}
+</style>

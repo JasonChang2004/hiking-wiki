@@ -25,7 +25,16 @@
           <h2 class="text-xl font-medium text-gray-700">🗂️ 知識分類索引</h2>
         </div>
         <div class="p-5">
-          <CategoryGrid />
+          <Suspense>
+            <CategoryGrid />
+            <template #fallback>
+              <div class="animate-pulse">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div v-for="i in 8" :key="i" class="h-20 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </template>
+          </Suspense>
         </div>
       </div>
     </section>
@@ -38,7 +47,14 @@
           <span class="text-xs text-gray-500">每週更新</span>
         </div>
         <div class="p-5">
-          <FeaturedCarousel />
+          <Suspense>
+            <FeaturedCarousel />
+            <template #fallback>
+              <div class="animate-pulse">
+                <div class="h-40 bg-gray-200 rounded"></div>
+              </div>
+            </template>
+          </Suspense>
         </div>
       </div>
     </section>
@@ -51,7 +67,14 @@
           <router-link to="/category/所有文章" class="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors">查看完整列表 →</router-link>
         </div>
         <div class="p-5">
-          <ArticleList />
+          <Suspense>
+            <ArticleList />
+            <template #fallback>
+              <div class="animate-pulse space-y-4">
+                <div v-for="i in 5" :key="i" class="h-16 bg-gray-200 rounded"></div>
+              </div>
+            </template>
+          </Suspense>
         </div>
       </div>
     </section>
@@ -61,9 +84,27 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 
-const ArticleList = defineAsyncComponent(() => import('../components/articles/ArticleList.vue'))
-const FeaturedCarousel = defineAsyncComponent(() => import('../components/layout/FeaturedCarousel.vue'))
-const CategoryGrid = defineAsyncComponent(() => import('../components/articles/CategoryGrid.vue'))
+// 優化異步組件載入，添加錯誤處理和載入狀態
+const ArticleList = defineAsyncComponent({
+  loader: () => import('../components/articles/ArticleList.vue'),
+  errorComponent: () => import('../components/common/ErrorComponent.vue'),
+  delay: 200,
+  timeout: 30000,
+})
+
+const FeaturedCarousel = defineAsyncComponent({
+  loader: () => import('../components/layout/FeaturedCarousel.vue'),
+  errorComponent: () => import('../components/common/ErrorComponent.vue'),
+  delay: 200,
+  timeout: 30000,
+})
+
+const CategoryGrid = defineAsyncComponent({
+  loader: () => import('../components/articles/CategoryGrid.vue'),
+  errorComponent: () => import('../components/common/ErrorComponent.vue'),
+  delay: 200,
+  timeout: 30000,
+})
 </script>
 
 <style scoped>

@@ -1,81 +1,137 @@
-<template>  <div class="article-list-container wiki-style">
-    <!-- 🔍 搜尋 + 分類 -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-5 border border-gray-300 bg-gray-50 p-3 rounded">
-      <div class="relative flex-grow">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<template>
+  <div class="mountain-article-list">
+    <!-- 搜尋與篩選區域 -->
+    <div class="search-filter-section">
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            v-model="search"
+            type="text"
+            placeholder="搜尋文章標題或內容..."
+            class="search-input"
+          />
+          <button 
+            v-if="search"
+            @click="search = ''"
+            class="clear-search"
+            title="清除搜尋"
+          >
+            ×
+          </button>
         </div>
-        <input
-          v-model="search"
-          type="text"
-          placeholder="搜尋文章標題或內容"
-          class="pl-9 w-full p-2 text-sm border border-gray-300 bg-white focus:border-blue-500 focus:outline-none"
-        />
       </div>
 
-      <select 
-        v-model="selectedCategory" 
-        class="p-2 text-sm border border-gray-300 bg-white focus:border-blue-500 focus:outline-none w-full sm:w-40"
-      >
-        <option value="">全部分類</option>
-        <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-      </select>
+      <div class="filter-container">
+        <select 
+          v-model="selectedCategory" 
+          class="category-select"
+        >
+          <option value="">📁 全部分類</option>
+          <option v-for="c in categories" :key="c" :value="c">
+            {{ getCategoryIcon(c) }} {{ c }}
+          </option>
+        </select>
+      </div>
     </div>
 
-    <!-- 📦 骨架屏 -->
-    <div v-if="loading" class="space-y-4">
-      <div v-for="i in 3" :key="i" class="animate-pulse">
-        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-        <div class="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-        <hr class="my-3 border-gray-100" />
+    <!-- 載入狀態 -->
+    <div v-if="loading" class="loading-section">
+      <div class="loading-grid">
+        <div v-for="i in 5" :key="i" class="loading-article-card">
+          <div class="loading-shimmer"></div>
+        </div>
       </div>
+      <p class="loading-text">🔄 正在載入最新條目...</p>
     </div>
     
-    <div v-else-if="filteredArticles.length === 0" class="text-center py-8 border border-gray-200 bg-gray-50">
-      <div class="mb-3">
-        <span class="text-4xl">📝</span>
+    <!-- 空狀態 -->
+    <div v-else-if="filteredArticles.length === 0" class="empty-state">
+      <div class="empty-icon">📝</div>
+      <h3 class="empty-title">暫無相關條目</h3>
+      <p class="empty-description">
+        {{ search || selectedCategory ? '請嘗試調整搜尋條件或瀏覽其他分類' : '目前還沒有已發布的文章，歡迎您來投稿第一篇！' }}
+      </p>
+      <div class="empty-actions" v-if="!search && !selectedCategory">
+        <router-link to="/submit-article" class="btn btn-primary">
+          <span>✍️</span>
+          立即投稿
+        </router-link>
       </div>
-      <div class="text-lg text-gray-700 mb-2">暫無相關條目</div>
-      <div class="text-gray-500 text-sm max-w-md mx-auto">請嘗試調整搜尋條件或瀏覽其他分類</div>
     </div>
 
-    <!-- 📋 條目列表 - 維基風格 -->
-    <div v-else>
-      <ul class="wiki-article-list">
-        <li
-          v-for="(article, index) in filteredArticles"
+    <!-- 文章列表 -->
+    <div v-else class="articles-section">
+      <!-- 結果統計 -->
+      <div class="results-header">
+        <div class="results-count">
+          <span class="count-number">{{ filteredArticles.length }}</span>
+          <span class="count-label">個條目</span>
+          <span v-if="search || selectedCategory" class="filter-info">
+            {{ search ? `包含「${search}」` : '' }}
+            {{ search && selectedCategory ? '，' : '' }}
+            {{ selectedCategory ? `分類「${selectedCategory}」` : '' }}
+          </span>
+        </div>
+        <div class="sort-options">
+          <select v-model="sortBy" class="sort-select">
+            <option value="newest">🕒 最新更新</option>
+            <option value="title">🔤 標題排序</option>
+            <option value="category">📂 分類排序</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 文章卡片網格 -->
+      <div class="article-grid">
+        <article
+          v-for="(article, index) in sortedArticles"
           :key="article.id"
-          class="wiki-article-item"
-        >          <div class="flex gap-3">
-            <!-- 右側內容 -->            <div class="flex-1">
-              <router-link :to="`/articles/${article.id}`" class="flex items-baseline gap-1">
-                <h3 class="text-base font-medium text-blue-600 hover:text-blue-800 hover:underline">
-                  {{ article.title }}
-                </h3>
-                <span class="text-xs text-gray-500">（{{ article.category || '一般' }}）</span>
-              </router-link>
-              
-              <p class="text-gray-700 line-clamp-2 text-sm mt-1 leading-relaxed">
-                {{ article.content }}
-              </p>
-              
-              <div class="flex items-center text-xs text-gray-500 mt-1 italic">
-                <span>更新於 {{ formatDate(article.createdAt) }}</span>
-                <span class="mx-2">|</span>
-                <span>作者：{{ article.displayName }}</span>
+          class="article-card"
+          :style="{ '--delay': index * 0.05 + 's' }"
+        >
+          <router-link :to="`/articles/${article.id}`" class="article-link">
+            <!-- 卡片頭部 -->
+            <div class="article-header">
+              <div class="article-category">
+                <span class="category-icon">{{ getCategoryIcon(article.category) }}</span>
+                <span class="category-name">{{ article.category || '一般' }}</span>
+              </div>
+              <div class="article-date">
+                {{ formatDate(article.createdAt) }}
               </div>
             </div>
-          </div>
-          
-          <!-- 簡單分隔線 -->
-          <hr v-if="index !== filteredArticles.length - 1" class="my-3 border-gray-200" />
-        </li>
-      </ul>
+
+            <!-- 主要內容 -->
+            <div class="article-content">
+              <h3 class="article-title">{{ article.title }}</h3>
+              <p class="article-excerpt">{{ getExcerpt(article.content) }}</p>
+            </div>
+
+            <!-- 卡片底部 -->
+            <div class="article-footer">
+              <div class="author-info">
+                <span class="author-icon">👤</span>
+                <span class="author-name">{{ article.displayName }}</span>
+              </div>
+              <div class="read-more">
+                <span class="read-text">閱讀全文</span>
+                <span class="arrow-icon">→</span>
+              </div>
+            </div>
+
+            <!-- 懸停效果 -->
+            <div class="hover-overlay"></div>
+          </router-link>
+        </article>
+      </div>
       
-      <!-- 頁面導航區 -->
-      <div class="wiki-pagination mt-4 text-center">
-        <div class="text-sm text-gray-500">
-          顯示 {{ filteredArticles.length }} 個項目
-        </div>
+      <!-- 載入更多按鈕 -->
+      <div class="load-more-section" v-if="hasMore">
+        <button @click="loadMore" class="btn btn-outline load-more-btn" :disabled="loadingMore">
+          <span v-if="loadingMore">⏳ 載入中...</span>
+          <span v-else>📚 載入更多條目</span>
+        </button>
       </div>
     </div>
   </div>
@@ -84,101 +140,622 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { db } from '../../firebase'
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
-import { formatDate } from '../../utils/formatters' // 使用新的格式化工具
-import type { Article } from '../../types' // 使用新的型別定義
+import { collection, getDocs, query, where, orderBy, limit, startAfter } from 'firebase/firestore'
+import { formatDate } from '../../utils/formatters'
+import type { Article } from '../../types'
 
 const articles = ref<Article[]>([])
 const loading = ref(true)
+const loadingMore = ref(false)
 const search = ref('')
 const selectedCategory = ref('')
+const sortBy = ref('newest')
+const hasMore = ref(true)
+const lastDoc = ref<any>(null)
+const pageSize = 12
 
-// 自訂分類清單 - 考慮是否可以從其他地方（例如 Firestore 或設定檔）動態獲取
-const categories = ['百岳', '郊山', '海外', '裝備']
+// 分類清單
+const categories = ['百岳', '郊山', '海外', '裝備', '登山路線', '裝備心得', '登山知識', '緊急應變', '野外生存', '保育生態', '登山飲食', '入門指南']
 
+// 取得分類圖示
+const getCategoryIcon = (category: string): string => {
+  const icons: Record<string, string> = {
+    '百岳': '🏔️',
+    '郊山': '⛰️',
+    '海外': '🌍',
+    '裝備': '🎒',
+    '登山路線': '🗻',
+    '裝備心得': '🎒',
+    '登山知識': '📚',
+    '緊急應變': '🚨',
+    '野外生存': '🏕️',
+    '保育生態': '🌱',
+    '登山飲食': '🍱',
+    '入門指南': '👣',
+    '一般': '📄'
+  };
+  return icons[category] || '📄';
+};
+
+// 取得文章摘要
+const getExcerpt = (content: string): string => {
+  if (!content) return '暫無內容描述...';
+  const plainText = content.replace(/<[^>]*>/g, ''); // 移除HTML標籤
+  return plainText.length > 120 ? plainText.substring(0, 120) + '...' : plainText;
+};
+
+// 篩選文章
 const filteredArticles = computed(() => {
   const keyword = search.value.toLowerCase()
   return articles.value.filter(article => {
     const matchSearch =
-      (article.title?.toLowerCase() || '').includes(keyword) || // 增加 null/undefined 檢查
-      (article.content?.toLowerCase() || '').includes(keyword) // 增加 null/undefined 檢查
+      (article.title?.toLowerCase() || '').includes(keyword) ||
+      (article.content?.toLowerCase() || '').includes(keyword)
     const matchCategory =
       !selectedCategory.value || article.category === selectedCategory.value
     return matchSearch && matchCategory
   })
 })
 
-onMounted(async () => {
-  loading.value = true // 確保 loading 狀態被設定
+// 排序文章
+const sortedArticles = computed(() => {
+  const sorted = [...filteredArticles.value]
+  
+  switch (sortBy.value) {
+    case 'title':
+      return sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+    case 'category':
+      return sorted.sort((a, b) => (a.category || '').localeCompare(b.category || ''))
+    case 'newest':
+    default:
+      return sorted.sort((a, b) => {
+        // 處理Firebase Timestamp或Date類型
+        let dateA: Date
+        let dateB: Date
+        
+        if (a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt) {
+          dateA = a.createdAt.toDate()
+        } else if (a.createdAt instanceof Date) {
+          dateA = a.createdAt
+        } else {
+          dateA = new Date(a.createdAt || 0)
+        }
+        
+        if (b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt) {
+          dateB = b.createdAt.toDate()
+        } else if (b.createdAt instanceof Date) {
+          dateB = b.createdAt
+        } else {
+          dateB = new Date(b.createdAt || 0)
+        }
+        
+        return dateB.getTime() - dateA.getTime()
+      })
+  }
+})
+
+// 載入文章
+const loadArticles = async (isLoadMore = false) => {
+  if (isLoadMore) {
+    loadingMore.value = true
+  } else {
+    loading.value = true
+  }
+  
   try {
-    const q = query(
+    let q = query(
       collection(db, 'articles'),
       where('status', '==', 'approved'),
-      orderBy('createdAt', 'desc')
-      // Consider adding limit() for pagination if list becomes very long
-      // limit(10) 
+      orderBy('createdAt', 'desc'),
+      limit(pageSize)
     )
+
+    if (isLoadMore && lastDoc.value) {
+      q = query(
+        collection(db, 'articles'),
+        where('status', '==', 'approved'),
+        orderBy('createdAt', 'desc'),
+        startAfter(lastDoc.value),
+        limit(pageSize)
+      )
+    }
+
     const snapshot = await getDocs(q)
-    articles.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article))
+    const newArticles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article))
+    
+    if (isLoadMore) {
+      articles.value = [...articles.value, ...newArticles]
+    } else {
+      articles.value = newArticles
+    }
+
+    lastDoc.value = snapshot.docs[snapshot.docs.length - 1]
+    hasMore.value = snapshot.docs.length === pageSize
+    
   } catch (error) {
-    console.error("Error loading articles:", error);
-    // Optionally, set an error state to display a message to the user
+    console.error("Error loading articles:", error)
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
+}
+
+// 載入更多
+const loadMore = () => {
+  loadArticles(true)
+}
+
+onMounted(() => {
+  loadArticles()
 })
 </script>
 
 <style scoped>
-/* 維基風格的文章列表 */
-.wiki-style {
-  font-family: 'Liberation Serif', 'Linux Libertine', Georgia, Times, serif;
+.mountain-article-list {
+  font-family: var(--font-body);
+  max-width: 100%;
 }
 
-.wiki-article-list {
-  font-size: 0.9rem;
+/* 搜尋與篩選區域 */
+.search-filter-section {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
-.wiki-article-item {
-  padding: 0.5rem 0;
+.search-container {
+  flex: 1;
+  min-width: 250px;
 }
 
-.wiki-article-item:hover {
-  background-color: #f8f9fa;
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-/* 文本截斷 */
-.line-clamp-2 {
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  font-size: 1rem;
+  color: var(--stone-medium);
+  z-index: 2;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  font-size: 0.875rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: var(--font-body);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--mountain-primary);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.clear-search {
+  position: absolute;
+  right: 0.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: var(--stone-light);
+  border-radius: 50%;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--stone-medium);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clear-search:hover {
+  background: var(--stone-medium);
+  color: white;
+}
+
+.filter-container {
+  flex-shrink: 0;
+}
+
+.category-select,
+.sort-select {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: white;
+  color: var(--stone-dark);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-body);
+}
+
+.category-select:focus,
+.sort-select:focus {
+  outline: none;
+  border-color: var(--mountain-primary);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* 載入狀態 */
+.loading-section {
+  text-align: center;
+}
+
+.loading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.loading-article-card {
+  height: 200px;
+  border-radius: 1rem;
+  overflow: hidden;
+  position: relative;
+  background: #f8f9fa;
+}
+
+.loading-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0) 0%, 
+    rgba(255,255,255,0.8) 50%, 
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.loading-text {
+  color: var(--stone-medium);
+  font-size: 1rem;
+  margin: 0;
+  animation: pulse 2s infinite;
+}
+
+/* 空狀態 */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--stone-dark);
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display);
+}
+
+.empty-description {
+  color: var(--stone-medium);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 400px;
+  margin: 0 auto 1.5rem;
+}
+
+.empty-actions {
+  margin-top: 1.5rem;
+}
+
+/* 文章區域 */
+.results-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(229, 231, 235, 0.3);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.results-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.count-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--mountain-primary);
+  font-family: var(--font-display);
+}
+
+.count-label {
+  color: var(--stone-medium);
+  font-size: 0.875rem;
+}
+
+.filter-info {
+  color: var(--stone-medium);
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.sort-options {
+  flex-shrink: 0;
+}
+
+/* 文章網格 */
+.article-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+/* 文章卡片 */
+.article-card {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  animation: slideInUp 0.6s ease-out calc(var(--delay));
+  animation-fill-mode: both;
+}
+
+.article-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--mountain-primary);
+}
+
+.article-link {
+  display: block;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+}
+
+.article-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1rem 0;
+  font-size: 0.75rem;
+}
+
+.article-category {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, var(--mountain-100), var(--mountain-200));
+  border-radius: 0.5rem;
+  color: var(--mountain-accent);
+  font-weight: 500;
+}
+
+.category-icon {
+  font-size: 0.875rem;
+}
+
+.article-date {
+  color: var(--stone-medium);
+  font-size: 0.75rem;
+}
+
+.article-content {
+  padding: 1rem;
+}
+
+.article-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--stone-dark);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  font-family: var(--font-display);
+  transition: color 0.3s ease;
+}
+
+.article-card:hover .article-title {
+  color: var(--mountain-primary);
+}
+
+.article-excerpt {
+  color: var(--stone-medium);
+  font-size: 0.875rem;
+  line-height: 1.6;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* 標準維基百科連結顏色 */
-.wiki-style a {
-  color: #0645ad;
+.article-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem 1rem;
+  margin-top: auto;
 }
 
-.wiki-style a:hover {
-  color: #3366bb;
-}
-
-.wiki-style a:visited {
-  color: #0b0080;
-}
-
-/* 維基百科風格的分頁導航 */
-.wiki-pagination {
-  font-size: 0.85rem;
-  color: #72777d;
-}
-
-/* 標準維基引用樣式 */
-.wiki-style .reference {
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--stone-medium);
   font-size: 0.75rem;
-  vertical-align: super;
-  color: #0645ad;
+}
+
+.author-icon {
+  font-size: 0.875rem;
+}
+
+.read-more {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--mountain-primary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.arrow-icon {
+  transition: transform 0.3s ease;
+}
+
+.article-card:hover .read-more {
+  color: var(--mountain-secondary);
+}
+
+.article-card:hover .arrow-icon {
+  transform: translateX(3px);
+}
+
+.hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.02) 0%, 
+    rgba(14, 165, 233, 0.02) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.article-card:hover .hover-overlay {
+  opacity: 1;
+}
+
+/* 載入更多 */
+.load-more-section {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more-btn {
+  padding: 0.875rem 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* 動畫 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .search-filter-section {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .results-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .article-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .article-content {
+    padding: 0.75rem;
+  }
+  
+  .article-title {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-input {
+    padding: 0.625rem 1rem 0.625rem 2.25rem;
+  }
+  
+  .category-select,
+  .sort-select {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .article-header {
+    padding: 0.75rem 0.75rem 0;
+  }
+  
+  .article-content {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .article-footer {
+    padding: 0 0.75rem 0.75rem;
+  }
+}
+
+/* 無障礙設計 */
+@media (prefers-reduced-motion: reduce) {
+  .article-card {
+    animation: none;
+  }
+  
+  .loading-shimmer {
+    animation: none;
+  }
+  
+  .loading-text {
+    animation: none;
+  }
+  
+  * {
+    transition: none !important;
+  }
 }
 </style>

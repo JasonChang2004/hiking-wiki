@@ -40,27 +40,44 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- 網站主標題區域 - 完全獨立 -->
-  <header class="website-header">
-    <div class="max-w-6xl mx-auto px-4 py-4">
+  <!-- 網站主標題區域 - 山林主題重新設計 -->
+  <header class="mountain-header">
+    <div class="header-background"></div>
+    <div class="header-content">
       <a href="/" class="main-title-link" @click.prevent="$router.push('/')">
-        <h1 class="main-title">山林知識庫</h1>
-        <p class="main-subtitle">Taiwan Mountain Knowledge Base</p>
+        <div class="title-container">
+          <div class="mountain-icon">🏔️</div>
+          <div class="title-text">
+            <h1 class="main-title">台灣山林知識庫</h1>
+            <p class="main-subtitle">Taiwan Mountain Knowledge Base</p>
+          </div>
+        </div>
       </a>
     </div>
   </header>
 
-  <!-- 導航欄區域 - 完全獨立 -->
+  <!-- 導航欄區域 - 現代玻璃效果 -->
   <nav class="navigation-bar">
-    <div class="max-w-6xl mx-auto px-4 py-2">
+    <div class="nav-background"></div>
+    <div class="nav-content">
       <div class="nav-container">
         <!-- 導航項目 -->
         <div class="nav-items">
-          <router-link to="/" exact class="wiki-nav-item" active-class="router-link-active">首頁</router-link>
-          <router-link to="/about" class="wiki-nav-item" active-class="router-link-active">關於</router-link>
+          <router-link to="/" exact class="nav-link" active-class="router-link-active">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">首頁</span>
+          </router-link>
+          <router-link to="/about" class="nav-link" active-class="router-link-active">
+            <span class="nav-icon">ℹ️</span>
+            <span class="nav-text">關於</span>
+          </router-link>
+          <router-link to="/category/所有文章" class="nav-link" active-class="router-link-active">
+            <span class="nav-icon">📚</span>
+            <span class="nav-text">知識庫</span>
+          </router-link>
         </div>
         
-        <!-- 用戶頭像 - 強制在最右邊 -->
+        <!-- 用戶區域 -->
         <div class="user-area">
           <LoginButton />
         </div>
@@ -70,154 +87,411 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* 重置所有 router-link 樣式影響 */
-/* 主標題區域的路由連結不受影響 */
-
-/* 網站主標題區域 - 獨立樣式 */
-.website-header {
+/* 主標題區域 - 山林主題重新設計 */
+.mountain-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 100px;
   z-index: 1000;
-  height: 90px; /* 縮減高度 */
+  overflow: hidden;
 }
 
-/* 主標題連結 - 完全隔離樣式 */
+.header-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    #15803d 0%,     /* 古木深綠 */
+    #22c55e 35%,    /* 主要綠色 */
+    #16a34a 70%,    /* 深山翠綠 */
+    #15803d 100%    /* 古木深綠 */
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease-in-out infinite;
+}
+
+.header-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:rgba(255,255,255,0.1);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(255,255,255,0);stop-opacity:1" /></linearGradient></defs><polygon fill="url(%23grad)" points="0,20 100,0 100,20"/></svg>');
+  background-size: 100px 20px;
+  animation: mountainPattern 20s linear infinite;
+  opacity: 0.3;
+}
+
+.header-content {
+  position: relative;
+  height: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
 .main-title-link {
   display: block !important;
   text-decoration: none !important;
-  text-align: center !important;
   color: white !important;
-  transition: transform 0.2s ease !important;
+  transition: all 0.3s ease !important;
   cursor: pointer !important;
+  padding: 0.5rem !important;
+  border-radius: 1rem !important;
 }
 
 .main-title-link:hover,
 .main-title-link:visited,
 .main-title-link:active,
-.main-title-link:focus,
-.main-title-link.router-link-active,
-.main-title-link.router-link-exact-active {
+.main-title-link:focus {
   text-decoration: none !important;
   color: white !important;
   transform: scale(1.02) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
+.mountain-icon {
+  font-size: 3rem;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.title-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .main-title {
-  font-size: 2.5rem !important;
+  font-size: clamp(1.875rem, 4vw, 2.5rem) !important;
   font-weight: 700 !important;
   color: white !important;
   margin: 0 !important;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3) !important;
-  letter-spacing: 0.05em !important;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.3) !important;
+  letter-spacing: 0.02em !important;
+  font-family: var(--font-display) !important;
+  line-height: 1.1 !important;
 }
 
 .main-subtitle {
-  font-size: 0.9rem !important;
-  color: rgba(255,255,255,0.9) !important;
+  font-size: clamp(0.75rem, 2vw, 0.875rem) !important;
+  color: rgba(255,255,255,0.95) !important;
   margin: 0.25rem 0 0 0 !important;
-  font-weight: 300 !important;
-  letter-spacing: 0.1em !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.05em !important;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.2) !important;
 }
 
-/* 導航欄區域 - 完全緊貼 */
+/* 強制確保導航文字和圖標始終顯示 */
+.nav-link * {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-block !important;
+}
+
+.nav-link .nav-text,
+.nav-link .nav-icon {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-block !important;
+  color: inherit !important;
+}
+
+/* 導航欄區域 - 玻璃morphism效果 */
 .navigation-bar {
   position: fixed;
-  top: 90px; /* 對應新的主標題高度 */
+  top: 100px;
   left: 0;
   right: 0;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  height: 60px;
   z-index: 999;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin: 0; /* 確保無邊距 */
-  padding: 0; /* 確保無內距 */
-  height: 50px; /* 縮減導航欄高度 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-/* 導航欄內部布局 */
+.nav-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+              0 2px 4px -1px rgba(0, 0, 0, 0.06),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.nav-content {
+  position: relative;
+  height: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  z-index: 10;
+}
+
 .nav-container {
   display: flex !important;
   align-items: center !important;
+  justify-content: space-between !important;
+  height: 100% !important;
   width: 100% !important;
-  position: relative !important;
-  height: 100%; /* 確保容器使用完整高度 */
 }
 
 .nav-items {
   display: flex !important;
   align-items: center !important;
-  gap: 0.25rem !important;
+  gap: 0.5rem !important;
   flex-shrink: 0 !important;
 }
 
-/* 用戶區域強制推到最右邊 */
-.user-area {
-  margin-left: auto !important;
+.nav-link {
   display: flex !important;
   align-items: center !important;
-  position: absolute !important;
-  right: 0 !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-}
-
-/* 導航項目樣式 - 只影響導航欄內的連結 */
-.nav-items .wiki-nav-item {
-  padding: 0.5rem 0.75rem !important;
-  color: #0645ad !important;
+  gap: 0.5rem !important;
+  padding: 0.5rem 1rem !important;
+  color: var(--stone-dark) !important;
   text-decoration: none !important;
-  font-size: 0.95rem !important;
-  white-space: nowrap !important;
-  border-radius: 4px !important;
-  transition: background-color 0.2s ease-in-out !important;
-  display: inline-block !important;
-}
-
-.nav-items .wiki-nav-item:hover {
-  text-decoration: none !important;
-  background-color: #f0f6ff !important;
-  color: #3366bb !important;
-}
-
-.nav-items .wiki-nav-item:visited {
-  color: #0b0080 !important;
-}
-
-.nav-items .router-link-active,
-.nav-items .wiki-nav-item.router-link-active {
+  font-size: 0.875rem !important;
   font-weight: 500 !important;
-  background-color: #e1ebff !important;
-  color: #0b0080 !important;
+  white-space: nowrap !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  background: transparent !important;
 }
 
-/* 響應式設計 */
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--mountain-primary), var(--mountain-secondary));
+  border-radius: 0.75rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: -1;
+}
+
+.nav-link:hover::before {
+  opacity: 0.1;
+}
+
+.nav-link:hover {
+  text-decoration: none !important;
+  color: var(--mountain-accent) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.15) !important;
+}
+
+.nav-link.active,
+.nav-link.router-link-active {
+  color: white !important;
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3) !important;
+  font-weight: 600 !important;
+  border: 1px solid #15803d !important;
+}
+
+.nav-link.active::before,
+.nav-link.router-link-active::before {
+  opacity: 0;
+}
+
+/* 強制選中狀態的文字樣式 */
+.nav-link.router-link-active .nav-text,
+.nav-link.active .nav-text,
+.nav-link.router-link-exact-active .nav-text {
+  color: white !important;
+  display: inline-block !important;
+  font-family: var(--font-display) !important;
+  flex-shrink: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+  background: none !important;
+}
+
+.nav-link.router-link-active .nav-icon,
+.nav-link.active .nav-icon,
+.nav-link.router-link-exact-active .nav-icon {
+  color: white !important;
+  font-size: 1rem !important;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)) !important;
+  flex-shrink: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.nav-icon {
+  font-size: 1rem !important;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1)) !important;
+  flex-shrink: 0 !important;
+  color: inherit !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.nav-text {
+  font-family: var(--font-display) !important;
+  flex-shrink: 0 !important;
+  color: inherit !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+}
+
+.user-area {
+  display: flex !important;
+  align-items: center !important;
+  margin-left: auto !important;
+}
+
+/* 動畫效果 */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes mountainPattern {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+/* 響應式設計 - 修正文字隱藏問題 */
 @media (max-width: 768px) {
-  .main-title {
-    font-size: 1.8rem !important;
-  }
-  
-  .main-subtitle {
-    font-size: 0.8rem !important;
-  }
-  
-  .website-header {
-    height: 75px; /* 手機版縮小 */
+  .mountain-header {
+    height: 80px;
   }
   
   .navigation-bar {
-    top: 75px; /* 手機版緊貼 */
-    height: 45px; /* 手機版導航欄高度 */
+    top: 80px;
+    height: 50px;
+  }
+  
+  .title-container {
+    gap: 0.75rem;
+  }
+  
+  .mountain-icon {
+    font-size: 2rem;
+  }
+  
+  .nav-link {
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .nav-icon {
+    font-size: 0.875rem !important;
+  }
+  
+  /* 確保在平板尺寸上文字始終顯示 */
+  .nav-text {
+    display: block !important;
+    font-size: 0.75rem !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    color: inherit !important;
+  }
+  
+  /* 選中狀態確保文字可見 */
+  .nav-link.router-link-active .nav-text,
+  .nav-link.active .nav-text {
+    display: block !important;
+    color: white !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 }
 
-/* 無障礙功能 */
+/* 只在極小螢幕上才隱藏文字 */
+@media (max-width: 380px) {
+  .title-container {
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+  
+  .mountain-icon {
+    font-size: 1.5rem;
+  }
+  
+  .nav-items {
+    gap: 0.25rem !important;
+  }
+  
+  .nav-link {
+    padding: 0.25rem 0.5rem !important;
+  }
+  
+  /* 只在極小螢幕(380px以下)才隱藏文字 */
+  .nav-text {
+    display: none !important;
+  }
+  
+  /* 但圖標始終顯示 */
+  .nav-icon {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
+
+/* 無障礙設計 */
 @media (prefers-reduced-motion: reduce) {
-  .nav-items .wiki-nav-item,
-  .main-title-link {
+  .main-title-link,
+  .nav-link,
+  .mountain-icon,
+  .header-background,
+  .header-background::before {
+    animation: none !important;
     transition: none !important;
+  }
+}
+
+/* 高對比度模式 */
+@media (prefers-contrast: high) {
+  .header-background {
+    background: #16a34a;
+  }
+  
+  .nav-background {
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 2px solid #16a34a;
+  }
+  
+  .nav-link {
+    color: #000000 !important;
+  }
+  
+  .nav-link.active {
+    background: #16a34a !important;
+    color: #ffffff !important;
   }
 }
 </style>

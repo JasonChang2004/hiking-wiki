@@ -1,75 +1,103 @@
 <template>
-  <div class="w-full wiki-categories">
-    <div v-if="loadingCounts" class="text-center py-4 text-gray-500">
-      正在載入分類統計...
+  <div class="mountain-categories">
+    <!-- 載入狀態 -->
+    <div v-if="loadingCounts" class="loading-section">
+      <div class="loading-grid">
+        <div v-for="i in 8" :key="i" class="loading-card">
+          <div class="loading-shimmer"></div>
+        </div>
+      </div>
+      <p class="loading-text">🔍 正在載入分類統計...</p>
     </div>
-    <div v-else class="wiki-category-table">
-      <table class="wiki-table w-full border-collapse">
-        <tbody>
-          <tr v-for="(row, rowIndex) in categoryRows" :key="rowIndex">
-            <td v-for="(cat, colIndex) in row" :key="colIndex" class="wiki-category-cell">
-              <div v-if="cat" class="wiki-category-content">
-                <router-link
-                  :to="`/category/${cat.name}`"
-                  class="wiki-category-link hover:underline"
-                >
-                  <div class="flex items-center">
-                    <span class="wiki-category-icon mr-2">{{ cat.icon }}</span>
-                    <span class="wiki-category-label">{{ cat.label }}</span>
-                  </div>
-                </router-link>
-                <div class="text-xs text-gray-500 ml-7">
-                  {{ cat.count }}+ 條目
-                </div>
+    
+    <!-- 分類網格 -->
+    <div v-else class="category-grid">
+      <div 
+        v-for="(category, index) in categories" 
+        :key="category.name"
+        class="category-card"
+        :style="{ '--delay': index * 0.1 + 's' }"
+      >
+        <router-link
+          :to="`/category/${category.name}`"
+          class="category-link"
+        >
+          <div class="category-content">
+            <!-- 圖示區域 -->
+            <div class="category-icon-container">
+              <span class="category-icon">{{ category.icon }}</span>
+              <div class="icon-background"></div>
+            </div>
+            
+            <!-- 文字內容 -->
+            <div class="category-info">
+              <div class="category-text">
+                <h3 class="category-title">{{ category.label }}</h3>
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <div class="category-stats">
+                <span class="article-count">{{ category.count }}+</span>
+                <span class="article-label">條目</span>
+              </div>
+            </div>
+            
+            <!-- 進入箭頭 -->
+            <div class="category-arrow">
+              <span class="arrow-icon">→</span>
+            </div>
+          </div>
+          
+          <!-- 懸停效果 -->
+          <div class="hover-overlay"></div>
+        </router-link>
+      </div>
     </div>
-    <div class="mt-5 text-xs text-gray-500 border-t border-gray-200 pt-3">
-      類別索引包含所有登山知識庫中的主題分類。點擊類別名稱可瀏覽該類別下的所有文章。
+    
+    <!-- 說明文字 -->
+    <div class="category-footer">
+      <div class="footer-content">
+        <span class="footer-icon">💡</span>
+        <p class="footer-text">
+          點擊任一分類深入探索相關知識，每個分類都包含經驗豐富的山友精心整理的實用資訊。
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { db } from '@/firebase'; // Corrected path
-import { collection, query, where, getCountFromServer } from 'firebase/firestore'; // Removed getDocs, getCountFromServer is used
-import type { CategoryItem } from '@/types'; // Corrected path to types
+import { ref, onMounted } from 'vue';
+import { db } from '@/firebase';
+import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+import type { CategoryItem } from '@/types';
 
-// Initial categories - consider making this configurable or fetched
-const categories = ref<CategoryItem[]>(
-  [
-    { name: '登山路線', label: '登山路線', icon: '🗻', count: 0 },
-    { name: '裝備心得', label: '裝備心得', icon: '🎒', count: 0 },
-    { name: '登山知識', label: '登山知識', icon: '📚', count: 0 },
-    { name: '緊急應變', label: '緊急應變', icon: '🚨', count: 0 },
-    { name: '野外生存', label: '野外生存', icon: '🏕️', count: 0 },
-    { name: '保育生態', label: '保育生態', icon: '🌱', count: 0 },
-    { name: '登山飲食', label: '登山飲食', icon: '🍱', count: 0 },
-    { name: '入門指南', label: '入門指南', icon: '👣', count: 0 },
-  ]
-);
+// 初始分類設定
+const categories = ref<CategoryItem[]>([
+  { name: '登山路線', label: '登山路線', icon: '🗻', count: 0 },
+  { name: '裝備心得', label: '裝備心得', icon: '🎒', count: 0 },
+  { name: '登山知識', label: '登山知識', icon: '📚', count: 0 },
+  { name: '緊急應變', label: '緊急應變', icon: '🚨', count: 0 },
+  { name: '野外生存', label: '野外生存', icon: '🏕️', count: 0 },
+  { name: '保育生態', label: '保育生態', icon: '🌱', count: 0 },
+  { name: '登山飲食', label: '登山飲食', icon: '🍱', count: 0 },
+  { name: '入門指南', label: '入門指南', icon: '👣', count: 0 },
+]);
 
 const loadingCounts = ref(true);
 
-const categoryRows = computed(() => {
-  const itemsPerRow = 4; // Or make this responsive
-  const rows: (CategoryItem | null)[][] = [];
-  // Create a copy to avoid modifying the original ref array directly if not intended
-  const catsProcessed: (CategoryItem | null)[] = [...categories.value]; // Explicitly type catsProcessed
-
-  while (catsProcessed.length % itemsPerRow !== 0) {
-    catsProcessed.push(null); // Pad with null for even rows
-  }
-
-  for (let i = 0; i < catsProcessed.length; i += itemsPerRow) {
-    rows.push(catsProcessed.slice(i, i + itemsPerRow));
-  }
-  return rows;
-});
+// 分類描述
+const getCategoryDescription = (categoryName: string): string => {
+  const descriptions: Record<string, string> = {
+    '登山路線': '熱門登山路線詳細攻略',
+    '裝備心得': '登山裝備選購與使用經驗',
+    '登山知識': '基礎登山技巧與安全知識',
+    '緊急應變': '山難預防與緊急處理',
+    '野外生存': '野外求生技能與技巧',
+    '保育生態': '山林生態保護與永續登山',
+    '登山飲食': '登山餐食準備與營養補給',
+    '入門指南': '新手登山完整入門指導',
+  };
+  return descriptions[categoryName] || '探索更多登山相關知識';
+};
 
 onMounted(async () => {
   loadingCounts.value = true;
@@ -80,7 +108,6 @@ onMounted(async () => {
         where('category', '==', category.name),
         where('status', '==', 'approved')
       );
-      // Use getCountFromServer for more efficient counting if only count is needed
       const snapshot = await getCountFromServer(q);
       return { ...category, count: snapshot.data().count };
     });
@@ -89,7 +116,6 @@ onMounted(async () => {
     categories.value = updatedCategories;
   } catch (error) {
     console.error('Error loading category counts:', error);
-    // Handle error, e.g., show a message or leave counts as 0
   } finally {
     loadingCounts.value = false;
   }
@@ -97,44 +123,393 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.wiki-categories {
-  font-family: 'Liberation Serif', 'Linux Libertine', Georgia, Times, serif;
+.mountain-categories {
+  font-family: var(--font-body);
+  width: 100%;
 }
 
-.wiki-table {
-  border-collapse: collapse;
+/* 載入狀態 */
+.loading-section {
+  text-align: center;
 }
 
-.wiki-category-cell {
-  padding: 0.75rem;
-  vertical-align: top;
-  border: 1px solid #eaecef;
+.loading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-.wiki-category-content {
-  min-height: 3rem;
+.loading-card {
+  height: 140px;
+  border-radius: 1rem;
+  overflow: hidden;
+  position: relative;
+  background: #f8f9fa;
 }
 
-.wiki-category-link {
-  color: #0645ad;
-  transition: color 0.15s ease;
+.loading-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0) 0%, 
+    rgba(255,255,255,0.8) 50%, 
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
 
-.wiki-category-link:visited {
-  color: #0b0080;
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.wiki-category-link:hover {
-  color: #3366bb;
-  text-decoration: underline;
+.loading-text {
+  color: var(--stone-medium);
+  font-size: 1rem;
+  margin: 0;
+  animation: pulse 2s infinite;
 }
 
-.wiki-category-icon {
-  font-size: 1.25rem;
-  opacity: 0.9;
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
-.wiki-category-label {
-  font-weight: 500;
+/* 分類網格 */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* 分類卡片 */
+.category-card {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  animation: slideInUp 0.6s ease-out calc(var(--delay));
+  animation-fill-mode: both;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.category-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--mountain-primary);
+}
+
+.category-link {
+  display: block;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+}
+
+.category-content {
+  position: relative;
+  padding: 1rem;
+  height: 75px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 2;
+}
+
+/* 圖示區域 */
+.category-icon-container {
+  position: relative;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-icon {
+  font-size: 1.125rem;
+  position: relative;
+  z-index: 3;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  transition: transform 0.3s ease;
+}
+
+.icon-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    var(--mountain-primary) 0%, 
+    var(--mountain-secondary) 100%
+  );
+  border-radius: 0.75rem;
+  opacity: 0.1;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.category-card:hover .category-icon {
+  transform: scale(1.1);
+}
+
+.category-card:hover .icon-background {
+  opacity: 0.2;
+  transform: scale(1.1);
+}
+
+/* 文字內容 */
+.category-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--stone-dark);
+  margin: 0;
+  font-family: var(--font-display);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  margin-left: 0.75rem;
+  flex-shrink: 0;
+}
+
+.article-count {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--mountain-primary);
+  font-family: var(--font-display);
+}
+
+.article-label {
+  font-size: 0.75rem;
+  color: var(--stone-medium);
+}
+
+/* 進入箭頭 */
+.category-arrow {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.arrow-icon {
+  font-size: 1rem;
+  color: var(--mountain-primary);
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover .category-arrow {
+  background: var(--mountain-primary);
+  transform: scale(1.1);
+}
+
+.category-card:hover .arrow-icon {
+  color: white;
+  transform: translateX(2px);
+}
+
+/* 懸停疊加層 */
+.hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.05) 0%, 
+    rgba(14, 165, 233, 0.05) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.category-card:hover .hover-overlay {
+  opacity: 1;
+}
+
+/* 頁腳說明 */
+.category-footer {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(240, 253, 244, 0.3);
+  border-radius: 1rem;
+  border: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.footer-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.footer-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.footer-text {
+  color: var(--stone-medium);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .category-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .category-content {
+    padding: 0.875rem;
+    height: 65px;
+  }
+  
+  .category-icon-container {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  
+  .category-icon {
+    font-size: 1rem;
+  }
+  
+  .category-title {
+    font-size: 0.9rem;
+  }
+  
+  .article-count {
+    font-size: 0.9rem;
+  }
+  
+  .footer-content {
+    text-align: center;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .category-content {
+    padding: 0.75rem;
+    gap: 0.5rem;
+    height: 55px;
+  }
+  
+  .category-icon-container {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .category-icon {
+    font-size: 0.875rem;
+  }
+  
+  .category-title {
+    font-size: 0.8rem;
+  }
+  
+  .article-count {
+    font-size: 0.8rem;
+  }
+  
+  .article-label {
+    font-size: 0.7rem;
+  }
+}
+
+/* 無障礙設計 */
+@media (prefers-reduced-motion: reduce) {
+  .category-card {
+    animation: none;
+  }
+  
+  .loading-shimmer {
+    animation: none;
+  }
+  
+  .loading-text {
+    animation: none;
+  }
+  
+  * {
+    transition: none !important;
+  }
+}
+
+/* 高對比度模式 */
+@media (prefers-contrast: high) {
+  .category-card {
+    border: 2px solid var(--stone-dark);
+    background: white;
+  }
+  
+  .category-title {
+    color: black;
+  }
+  
+  .icon-background {
+    background: var(--mountain-primary);
+    opacity: 0.3;
+  }
 }
 </style>

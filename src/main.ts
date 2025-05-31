@@ -20,6 +20,11 @@ const routes = [
     meta: { title: '關於我們 - 台灣登山知識庫' }
   },
   { 
+    path: '/login', 
+    component: () => import('./views/Login.vue'),
+    meta: { title: '登入 - 台灣登山知識庫' }
+  },
+  { 
     path: '/review', 
     component: () => import('./views/Review.vue'),
     meta: { title: '審核文章 - 台灣登山知識庫', requiresAuth: true }

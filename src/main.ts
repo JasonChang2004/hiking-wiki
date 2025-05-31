@@ -21,7 +21,8 @@ const routes = [
     path: '/notifications',
     name: 'Notifications',
     component: () => import('./views/Notifications.vue'),
-  }
+  },
+  { path: '/submit-article', component: () => import('./views/SubmitArticlePage.vue') }
 ]
 
 const router = createRouter({

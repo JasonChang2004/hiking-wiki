@@ -250,8 +250,14 @@ const resetForm = () => {
 }
 
 onMounted(() => {
+  if (!auth.currentUser) {
+    alert('請先登入才能投稿。');
+    router.push('/'); // 導向首頁
+    return; // 如果未登入，則不執行後續操作
+  }
+
   if (route.query.edit && typeof route.query.id === 'string') {
     loadArticleForEdit(route.query.id);
   }
 });
-</script>
+</script> 

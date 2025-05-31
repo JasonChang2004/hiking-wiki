@@ -123,9 +123,29 @@ const toggleFeatured = async (article: Article) => {
   }
 };
 
+const checkMyClaims = async () => {
+  if (auth.currentUser) {
+    try {
+      // true 會強制刷新 token
+      const idTokenResult = await auth.currentUser.getIdTokenResult(true);
+      console.log('Firebase ID Token Claims:', idTokenResult.claims);
+      if (idTokenResult.claims.admin === true) {
+        console.log('User HAS admin custom claim.');
+      } else {
+        console.log('User DOES NOT have admin custom claim, or it is not true.');
+        alert('偵測到目前使用者沒有管理員自訂宣告，或宣告不為 true。請確認 Firebase Function "grantAdminRole" 是否已成功為此帳號設定權限，並已重新登入以刷新 Token。');
+      }
+    } catch (error) {
+      console.error('Error getting ID token result:', error);
+    }
+  } else {
+    console.log('No current user found.');
+  }
+};
+
 let authUnsubscribe: (() => void) | null = null; // For unsubscribing
 
-onMounted(() => {
+onMounted(async () => {
   loadUsers();
   loadArticles();
   const authInstance = auth; // Use the imported auth directly
@@ -133,6 +153,7 @@ onMounted(() => {
   authUnsubscribe = authInstance.onAuthStateChanged((user) => {
     currentUid.value = user ? user.uid : null;
   });
+  await checkMyClaims(); // 在載入時檢查一次
 });
 
 onUnmounted(() => {

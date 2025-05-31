@@ -1,6 +1,6 @@
 <template>
   <div class="featured-carousel-container">
-    <h2 class="text-2xl font-bold text-center my-4">精選文章</h2>
+    <h2 class="text-2xl font-bold mb-4">精選文章</h2>
     <div v-if="isLoading" class="text-center">載入中...</div>
     <div v-if="error" class="text-center text-red-500">{{ error }}</div>
     <div v-if="!isLoading && !error && articles.length === 0" class="text-center">沒有精選文章</div>
@@ -23,7 +23,6 @@
 .featured-carousel-container {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 1rem;
 }
 
 .carousel {

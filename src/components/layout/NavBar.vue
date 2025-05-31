@@ -34,11 +34,10 @@ onUnmounted(() => {
 </script>
 
 <template>  <nav class="w-full border-b border-wiki-border-light bg-wiki-bg fixed top-0 left-0 right-0 z-50">
-    <div class="max-w-5xl mx-auto px-4 py-2 flex justify-between items-center">
+    <div class="max-w-5xl mx-auto px-4 py-2 flex justify-center items-center">
       <!-- Logo -->
       <router-link to="/" class="flex items-center space-x-2">
-        <div class="text-2xl">🏔️</div>
-        <div class="font-medium text-xl">山林知識庫</div>
+        <div class="text-3xl font-bold text-center flex-grow">山林知識庫</div>
       </router-link>
 
       <!-- 導覽列項目 -->

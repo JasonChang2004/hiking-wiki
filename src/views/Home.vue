@@ -2,19 +2,19 @@
   <div class="wiki-container mt-16 mb-12 space-y-16">
 
     <!-- Hero 區塊 -->
-    <section class="bg-white border border-gray-200 shadow-sm rounded-sm max-w-5xl mx-auto px-6 py-10 flex flex-col md:flex-row gap-6 items-center">
+    <section class="bg-white border border-gray-200 shadow-sm rounded-sm max-w-5xl mx-auto px-6 py-10 flex flex-col md:flex-row gap-8 items-center">
       <div class="md:w-1/2">
         <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">🏞️ 歡迎來到台灣登山知識庫</h1>
-        <p class="text-gray-700 text-lg leading-relaxed">
+        <p class="text-gray-700 text-lg leading-relaxed mb-6">
           這是一個由登山愛好者共同維護的協作平台，致力於整理、分享與保存台灣山林的相關知識與實務經驗。
         </p>
-        <div class="mt-6 flex gap-3">
-          <router-link to="/my-articles" class="text-sm px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">✍️ 開始投稿</router-link>
-          <a href="#latest" class="text-sm px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded hover:bg-gray-100">📚 瀏覽條目</a>
+        <div class="mt-6 flex flex-col sm:flex-row gap-4">
+          <router-link to="/submit-article" class="text-base px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-300 ease-in-out transform hover:-translate-y-0.5 flex items-center justify-center">✍️ 開始投稿</router-link>
+          <a href="#latest" class="text-base px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors duration-300 ease-in-out flex items-center justify-center">📚 瀏覽條目</a>
         </div>
       </div>
-      <div class="md:w-1/2 hidden md:block">
-        <img src="https://images.unsplash.com/photo-1534215754734-1757895a019d?auto=format&fit=crop&w=600&q=80" alt="台灣山岳" class="w-full h-64 object-cover rounded" />
+      <div class="md:w-1/2 hidden md:block p-4">
+        <!-- 提示：可在此處放置與台灣山脈或登山相關的吸引人的圖片或圖形 -->
       </div>
     </section>
 
@@ -59,9 +59,11 @@
 </template>
 
 <script setup lang="ts">
-import ArticleList from '../components/articles/ArticleList.vue'
-import FeaturedCarousel from '../components/layout/FeaturedCarousel.vue'
-import CategoryGrid from '../components/articles/CategoryGrid.vue'
+import { defineAsyncComponent } from 'vue'
+
+const ArticleList = defineAsyncComponent(() => import('../components/articles/ArticleList.vue'))
+const FeaturedCarousel = defineAsyncComponent(() => import('../components/layout/FeaturedCarousel.vue'))
+const CategoryGrid = defineAsyncComponent(() => import('../components/articles/CategoryGrid.vue'))
 </script>
 
 <style scoped>

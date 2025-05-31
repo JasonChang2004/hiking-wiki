@@ -23,9 +23,9 @@ const routes = [
     path: '/review', 
     component: () => import('./views/Review.vue'),
     meta: { title: '審核文章 - 台灣登山知識庫', requiresAuth: true }
-  },
-  { 
+  },  { 
     path: '/articles/:id', 
+    name: 'ArticleDetail',
     component: () => import('./views/ArticleDetail.vue'),
     meta: { title: '文章詳情 - 台灣登山知識庫' }
   },
@@ -49,9 +49,9 @@ const routes = [
     name: 'Notifications',
     component: () => import('./views/Notifications.vue'),
     meta: { title: '通知中心 - 台灣登山知識庫', requiresAuth: true }
-  },
-  { 
-    path: '/submit-article', 
+  },  { 
+    path: '/submit-article',
+    name: 'SubmitArticle', 
     component: () => import('./views/SubmitArticlePage.vue'),
     meta: { title: '投稿文章 - 台灣登山知識庫', requiresAuth: true }
   },
@@ -65,9 +65,8 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
-  // 優化滾動行為
-  scrollBehavior(to, _from, savedPosition) {
+  routes,  // 優化滾動行為
+  scrollBehavior(_, _from, savedPosition) {
     if (savedPosition) {
       return savedPosition
     } else {

@@ -220,10 +220,9 @@ onUnmounted(() => {
                   'text-yellow-600': article.status === 'pending',
                   'text-red-600': article.status === 'rejected'
                 }">{{ article.status }}</span>
-                <span v-if="article.reviewedAt"> | 審核於: {{ formatDate(article.reviewedAt) }}</span>
-              </p>
+                <span v-if="article.reviewedAt"> | 審核於: {{ formatDate(article.reviewedAt) }}</span>              </p>
             </div>
-            <router-link :to="`/article/${article.id}`" class="text-blue-500 hover:text-blue-700 text-sm whitespace-nowrap ml-4">檢視文章</router-link>
+            <router-link :to="`/articles/${article.id}`" class="text-blue-500 hover:text-blue-700 text-sm whitespace-nowrap ml-4">檢視文章</router-link>
           </div>
           <div class="flex gap-2 mt-2 items-center">
             <button

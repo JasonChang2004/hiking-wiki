@@ -71,9 +71,7 @@ onUnmounted(() => {
 
 <style scoped>
 /* 重置所有 router-link 樣式影響 */
-:deep(.router-link-active) {
-  /* 不影響主標題 */
-}
+/* 主標題區域的路由連結不受影響 */
 
 /* 網站主標題區域 - 獨立樣式 */
 .website-header {
@@ -83,7 +81,7 @@ onUnmounted(() => {
   right: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   z-index: 1000;
-  height: 110px; /* 固定高度 */
+  height: 90px; /* 縮減高度 */
 }
 
 /* 主標題連結 - 完全隔離樣式 */
@@ -127,7 +125,7 @@ onUnmounted(() => {
 /* 導航欄區域 - 完全緊貼 */
 .navigation-bar {
   position: fixed;
-  top: 110px; /* 精確等於主標題高度 */
+  top: 90px; /* 對應新的主標題高度 */
   left: 0;
   right: 0;
   background-color: #ffffff;
@@ -136,6 +134,7 @@ onUnmounted(() => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   margin: 0; /* 確保無邊距 */
   padding: 0; /* 確保無內距 */
+  height: 50px; /* 縮減導航欄高度 */
 }
 
 /* 導航欄內部布局 */
@@ -144,6 +143,7 @@ onUnmounted(() => {
   align-items: center !important;
   width: 100% !important;
   position: relative !important;
+  height: 100%; /* 確保容器使用完整高度 */
 }
 
 .nav-items {
@@ -204,11 +204,12 @@ onUnmounted(() => {
   }
   
   .website-header {
-    height: 90px; /* 手機版縮小 */
+    height: 75px; /* 手機版縮小 */
   }
   
   .navigation-bar {
-    top: 90px; /* 手機版緊貼 */
+    top: 75px; /* 手機版緊貼 */
+    height: 45px; /* 手機版導航欄高度 */
   }
 }
 

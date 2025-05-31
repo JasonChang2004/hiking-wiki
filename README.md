@@ -1,4 +1,4 @@
-# Hiking Wiki 開發進度總整理（至 2025/5/29）
+# Hiking Wiki 開發進度總整理（至 2025/6/1）
 
 ## 📁 專案基本架構
 
@@ -14,47 +14,45 @@
 - **`admin/`**
   - `ReviewArticles.vue`：審核文章頁（規劃中）
 - **`articles/`**
-  - `ArticleList.vue`：文章清單元件（含搜尋功能）
-  - `CategoryGrid.vue`：分類導覽按鈕區塊（如登山路線、裝備心得等）
-  - `SubmitArticle.vue`：投稿表單，支援 Markdown 編輯與即時預覽
+  - `ArticleList.vue`：文章清單元件，包含即時搜尋功能，顯示文章列表。
+  - `CategoryGrid.vue`：分類導覽按鈕區塊，提供分類瀏覽功能（如登山路線、裝備心得等）。
+  - `SubmitArticle.vue`：投稿表單，支援 Markdown 編輯與即時預覽。
 - **`auth/`**
-  - `LoginButton.vue`：登入/登出按鈕，顯示頭像與名稱
+  - `LoginButton.vue`：登入/登出按鈕，顯示使用者頭像與名稱。
 - **`common/`**
-  - `UserGreeting.vue`：首頁歡迎語元件（登入者顯示打招呼）
+  - `UserGreeting.vue`：首頁歡迎語元件，根據登入狀態顯示打招呼。
 - **`layout/`**
-  - `FeaturedCarousel.vue`：精選文章輪播（顯示 `isFeatured = true` 條目）
-  - `NavBar.vue`：導覽列元件
+  - `FeaturedCarousel.vue`：精選文章輪播，顯示 `isFeatured = true` 的文章。
+  - `NavBar.vue`：導覽列元件，包含導航功能與登入狀態顯示。
 
-### 🔸 `src/firebase/`
+### 🔸 `src/`
 
-- `index.ts`：初始化 Firebase，export auth/db/functions
-- `functions.ts`：封裝 Firebase Cloud Functions
-- `admins.ts`：管理 UID 權限設定（預留用）
-- `authUtils.ts`：登入狀態與權限驗證工具（可擴充）
+- **`components/`**
+  - 包含各種 Vue 元件，例如 `NavBar.vue`、`FeaturedCarousel.vue` 等，負責 UI 顯示。
+- **`composables/`**
+  - 提供可重用的功能，例如 `useAuth.ts` 處理認證邏輯，`useArticles.ts` 管理文章。
+- **`config/`**
+  - 包含環境配置，例如 `environment.ts`。
+- **`firebase/`**
+  - Firebase 相關功能，例如 `index.ts` 初始化 Firebase，`functions.ts` 封裝後端邏輯。
+- **`store/`**
+  - Pinia 狀態管理，例如 `notifications.ts` 管理通知。
+- **`views/`**
+  - 包含主要頁面，例如 `Home.vue`、`AdminPanel.vue`。
 
-### 🔸 `src/views/`
+### 🔸 `functions/`
 
-- `Home.vue`：首頁，結合歡迎詞、精選文章、分類網格與文章列表
-- `About.vue`：關於本站介紹
-- `AdminPanel.vue`：管理員後台頁面，包含：
-  - 管理員帳號管理（切換 isAdmin 權限）
-  - 審核文章（切換 `status` 為 approved/pending）
-  - 設定文章為精選（切換 `isFeatured`）
-- `MyArticles.vue`：顯示登入使用者投稿文章
-- `ArticleDetail.vue`：Markdown 格式文章詳情頁
-- `Category.vue`：分類瀏覽頁
-- `Review.vue`：審核投稿頁（規劃中）
-- `Notifications.vue`：通知中心，支援標記已讀/全部已讀/文章導向
+- **`src/`**
+  - 包含 Cloud Functions 的 TypeScript 源碼，例如 `index.ts`。
+- **`lib/`**
+  - 編譯後的 JavaScript 文件。
 
-### 🔸 `src/store/`
+### 🔸 `interactive-feedback-mcp/`
 
-- `notifications.ts`：Pinia 模組，管理未讀通知數（`unreadCount`）
-
-### 🔸 其他核心檔案
-
-- `App.vue`：主畫面含導覽列與 `<router-view />`
-- `main.ts`：初始化 Vue App，註冊 Pinia、Router
-- `style.css`：Tailwind 自定樣式
+- **`server.py`**
+  - 提供互動式反饋功能的伺服器端邏輯。
+- **`feedback_ui.py`**
+  - 處理用戶界面邏輯。
 
 ---
 
@@ -212,3 +210,123 @@
 - 💻 確保桌面視圖顯示完整導航欄
 - 📱 優化移動裝置視圖的摺疊選單
 - 🔄 改進響應式設計的斷點處理
+
+---
+
+## 🚀 台灣登山知識庫 - 全面優化總結
+
+### 📋 優化概覽
+
+本次優化涵蓋了 **效能**、**UI/UX**、**功能架構** 和 **開發體驗** 四個主要面向，共實施了 **11 項核心優化**。
+
+#### ⚡ 效能優化 (Performance)
+
+1. **TypeScript 配置優化**
+   - 修復：移除無效的 `erasableSyntaxOnly` 編譯選項
+   - 改善：更嚴格的類型檢查配置
+
+2. **路由系統優化**
+   - 新增：動態標題管理 (`meta.title`)
+   - 新增：智能滾動行為 (`scrollBehavior`)
+   - 新增：路由權限標記 (`requiresAuth`, `requiresAdmin`)
+   - 新增：404 錯誤頁面
+
+3. **Vite 構建優化**
+   - 代碼分割：Vue、Firebase、UI 庫分離打包
+   - 壓縮優化：Terser 壓縮，移除 console 和 debugger
+   - 開發體驗：自動開啟瀏覽器，CORS 支持
+   - 依賴預構建：加速開發服務器啟動
+
+4. **樣式系統優化**
+   - 合併 CSS：減少 HTTP 請求數量
+   - 載入順序：優化樣式載入順序
+
+5. **組件懶加載優化**
+   - Suspense：添加加載狀態和錯誤邊界
+   - 錯誤處理：統一的錯誤組件
+   - 加載動畫：骨架屏加載效果
+
+#### 🎨 UI/UX 優化
+
+6. **響應式導航欄**
+   - 移動端選單：完整的漢堡選單實現
+   - 無障礙功能：ARIA 標籤和鍵盤導航
+   - 動畫效果：流暢的展開/收合動畫
+   - 點擊外部關閉：改善用戶體驗
+
+7. **加載組件系統**
+   - 多尺寸支持：sm, md, lg, xl 四種尺寸
+   - 多顏色主題：blue, gray, green, red
+   - 全屏遮罩：支持全屏加載狀態
+   - 無障礙動畫：尊重用戶的動畫偏好設定
+
+#### 🔧 功能架構優化
+
+8. **Composables 架構**
+   - useAuth：統一的認證狀態管理
+   - useArticles：文章管理中心
+   - useValidation：表單驗證系統
+
+9. **環境配置管理**
+   - 類型安全配置：完整的 TypeScript 類型定義
+   - 環境變數驗證：啟動時檢查必要配置
+   - 功能開關：基於環境的功能切換
+
+10. **PWA 支持 (進行中)**
+    - Service Worker：離線快取支持
+    - App Manifest：可安裝的 Web 應用
+
+---
+
+## 🔧 導航欄問題修復總結
+
+### 修復的問題
+
+1. 重複顯示「山林知識庫」
+   - 原因：App.vue 和 NavBar.vue 之間有樣式衝突
+   - 解決方案：移除 App.vue 中重複的導航樣式
+
+2. 通知計數錯誤顯示
+   - 原因：通知 store 的初始化邏輯有問題
+   - 解決方案：改進通知 store 的錯誤處理
+
+3. 未知按鈕元素
+   - 檢查項目：NavBar.vue SVG 標籤正確
+
+---
+
+## 🚨 快速修復指引
+
+### 問題總結
+剛才的優化導致了一些依賴問題，主要是 PWA 相關的包還沒有安裝就被使用了。
+
+### 已修復的問題
+
+1. **Vite 配置錯誤**
+   - 移除了未安裝的 `vite-plugin-pwa` 依賴
+   - 恢復基本的 Vite 配置
+
+2. **Package.json 依賴**
+   - 移除了未安裝的 PWA 相關包
+
+3. **TypeScript 類型錯誤**
+   - 修復了 `useValidation` composable 的類型問題
+
+---
+
+### 現在可以運行
+請重新嘗試運行開發服務器：
+
+```bash
+npm run dev
+```
+
+---
+
+### 核心優化仍然生效
+
+- 更快的載入速度
+- 完整的移動端支持
+- 統一的錯誤處理
+- 可重用的 Composables
+- 改善的用戶體驗

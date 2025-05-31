@@ -59,7 +59,7 @@ onMounted(async () => {
 <template>
   <div class="article-detail-container">
     <!-- 骨架屏 -->
-    <div v-if="loading" class="max-w-4xl mx-auto p-6">
+    <div v-if="loading" class="article-content">
       <div class="animate-pulse space-y-6">
         <div class="h-10 bg-gray-200 rounded-lg w-3/4"></div>
         <div class="h-5 bg-gray-200 rounded-lg w-1/2"></div>
@@ -74,7 +74,7 @@ onMounted(async () => {
     </div>
     
     <!-- 文章內容 -->
-    <div v-else-if="article" class="mx-auto max-w-4xl">
+    <div v-else-if="article" class="article-content">
       <!-- 文章標題與資訊區 - 維基風格 -->
       <div class="border-b border-wiki-border-light pb-2 mb-4">
         <h1 class="text-3xl font-normal">{{ article.title }}</h1>
@@ -157,9 +157,8 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    
-    <!-- 找不到文章 -->
-    <div v-else class="max-w-2xl mx-auto p-6 text-center py-10 border border-wiki-border-light bg-wiki-bg-light">
+      <!-- 找不到文章 -->
+    <div v-else class="article-content text-center py-10 border border-wiki-border-light bg-wiki-bg-light">
       <div class="text-3xl mb-4">🏔️</div>
       <h2 class="text-xl mb-2">找不到此文章</h2>
       <div class="text-gray-600 mb-6">可能已被刪除或您沒有權限查看</div>
@@ -171,6 +170,28 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* 文章詳情頁面布局 */
+.article-detail-container {
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+.article-content {
+  max-width: 64rem; /* max-w-4xl equivalent */
+  margin: 0 auto;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  position: relative;
+  z-index: 1;
+}
+
+/* 確保在小螢幕上有適當的間距 */
+@media (max-width: 768px) {
+  .article-content {
+    padding: 1rem;
+  }
+}
+
 /* 使用維基百科風格樣式 */
 :deep(.wiki-text) {
   font-family: 'Linux Libertine', Georgia, Times, serif;

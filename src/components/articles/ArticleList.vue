@@ -45,20 +45,9 @@
           v-for="(article, index) in filteredArticles"
           :key="article.id"
           class="wiki-article-item"
-        >
-          <div class="flex gap-3">
-            <!-- 左側縮略圖 (小) -->
-            <div class="hidden sm:block w-20 h-20 flex-shrink-0 border border-gray-200">
-              <img 
-                :src="`https://source.unsplash.com/100x100/?hiking,mountains,${article.id}`" 
-                :alt="article.title"
-                class="w-full h-full object-cover"
-              />
-            </div>
-            
-            <!-- 右側內容 -->
-            <div class="flex-1">
-              <router-link :to="`/article/${article.id}`" class="flex items-baseline gap-1">
+        >          <div class="flex gap-3">
+            <!-- 右側內容 -->            <div class="flex-1">
+              <router-link :to="`/articles/${article.id}`" class="flex items-baseline gap-1">
                 <h3 class="text-base font-medium text-blue-600 hover:text-blue-800 hover:underline">
                   {{ article.title }}
                 </h3>

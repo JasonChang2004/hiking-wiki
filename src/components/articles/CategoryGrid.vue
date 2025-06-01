@@ -39,11 +39,6 @@
                 <span class="article-label">條目</span>
               </div>
             </div>
-            
-            <!-- 進入箭頭 -->
-            <div class="category-arrow">
-              <span class="arrow-icon">→</span>
-            </div>
           </div>
           
           <!-- 懸停效果 -->
@@ -111,6 +106,9 @@ onMounted(async () => {
 .mountain-categories {
   font-family: var(--font-body);
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* 載入狀態 */
@@ -170,6 +168,11 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  box-sizing: border-box;
 }
 
 /* 分類卡片 */
@@ -179,7 +182,8 @@ onMounted(async () => {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   animation: slideInUp 0.6s ease-out calc(var(--delay));
   animation-fill-mode: both;
@@ -198,7 +202,7 @@ onMounted(async () => {
 
 .category-card:hover {
   transform: translateY(-5px) scale(1.02);
-  box-shadow: var(--shadow-elevated);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border-color: var(--mountain-primary);
 }
 
@@ -312,11 +316,9 @@ onMounted(async () => {
 
 /* 進入箭頭 */
 .category-arrow {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 2rem;
-  height: 2rem;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -324,10 +326,11 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
+  margin-left: 0.5rem;
 }
 
 .arrow-icon {
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: var(--mountain-primary);
   transition: transform 0.3s ease;
 }
@@ -398,6 +401,7 @@ onMounted(async () => {
   .category-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
+    padding: 0 var(--space-sm);
   }
   
   .category-content {
@@ -422,6 +426,15 @@ onMounted(async () => {
     font-size: 0.9rem;
   }
   
+  .category-arrow {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .arrow-icon {
+    font-size: 0.75rem;
+  }
+  
   .footer-content {
     text-align: center;
     flex-direction: column;
@@ -432,6 +445,11 @@ onMounted(async () => {
 @media (max-width: 480px) {
   .loading-grid {
     grid-template-columns: 1fr;
+    padding: 0 var(--space-xs);
+  }
+  
+  .category-grid {
+    padding: 0 var(--space-xs);
   }
   
   .category-content {
@@ -458,6 +476,15 @@ onMounted(async () => {
   }
   
   .article-label {
+    font-size: 0.7rem;
+  }
+  
+  .category-arrow {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  .arrow-icon {
     font-size: 0.7rem;
   }
 }

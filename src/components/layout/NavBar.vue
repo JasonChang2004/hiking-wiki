@@ -408,8 +408,8 @@ onUnmounted(() => {
   .mountain-icon {
     font-size: 2rem;
   }
-}
-
+  }
+  
 /* 只在桌面端顯示的備用規則 */
 @media (min-width: 769px) {
   .mountain-header {

@@ -52,6 +52,13 @@
   margin: 0 auto;
   padding-left: var(--space-md);
   padding-right: var(--space-md);
+  box-sizing: border-box;
+  /* 確保容器不會超出螢幕寬度 */
+  max-width: 100%;
+  overflow-x: hidden;
+  /* 明確設置左右對稱 */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* 響應式網格系統 */

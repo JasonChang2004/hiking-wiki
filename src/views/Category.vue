@@ -4,6 +4,7 @@ import { db } from '../firebase'
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
 import { onMounted, ref, watch } from 'vue'
 import { formatDate } from '../utils/formatters'
+import { getArticlePreview } from '../utils/formatters'
 import type { Article } from '../types'
 
 const route = useRoute()
@@ -84,13 +85,6 @@ const getCategoryDescription = (category: string): string => {
     '一般': '其他登山相關主題與討論'
   };
   return descriptions[category] || '探索相關的登山知識與經驗分享';
-};
-
-// 取得文章摘要
-const getExcerpt = (content: string): string => {
-  if (!content) return '暫無內容描述...';
-  const plainText = content.replace(/<[^>]*>/g, ''); // 移除HTML標籤
-  return plainText.length > 120 ? plainText.substring(0, 120) + '...' : plainText;
 };
 
 onMounted(() => {
@@ -195,7 +189,7 @@ watch(
               <!-- 主要內容 -->
               <div class="article-content">
                 <h3 class="article-title">{{ article.title }}</h3>
-                <p class="article-excerpt">{{ getExcerpt(article.content) }}</p>
+                <p class="article-excerpt" v-html="getArticlePreview(article.content)"></p>
               </div>
 
               <!-- 卡片底部 -->
@@ -424,8 +418,11 @@ watch(
 /* 文章網格 */
 .article-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* 文章卡片 */
@@ -520,6 +517,12 @@ watch(
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 文章摘要中的超連結樣式 */
+.article-excerpt :deep(link) {
+  color: #0ea5e9;
+  font-weight: 500;
 }
 
 .article-footer {

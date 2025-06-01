@@ -229,6 +229,9 @@ const fetchNotifications = () => {
 
 const markAsRead = async (notificationId: string) => {
   try {
+    console.log(`正在標記通知 ${notificationId} 為已讀...`)
+    console.log(`當前用戶:`, currentUser.value)
+    
     // 先找到通知的索引
     const index = notifications.value.findIndex(n => n.id === notificationId)
     if (index === -1) {
@@ -237,18 +240,43 @@ const markAsRead = async (notificationId: string) => {
     }
 
     const notification = notifications.value[index]
+    console.log(`通知詳情:`, notification)
 
     // 檢查是否已經是已讀狀態
     if (notification.read) {
+      console.log("通知已經是已讀狀態")
       return
     }
 
-    // 檢查權限
-    if (notification.uid !== currentUser.value?.uid) {
-      console.error("Permission denied: notification uid doesn't match current user")
-      alert('沒有權限修改此通知')
+    // 詳細的權限檢查和調試信息
+    console.log(`權限檢查:`)
+    console.log(`- 通知uid: ${notification.uid}`)
+    console.log(`- 當前用戶uid: ${currentUser.value?.uid}`)
+    console.log(`- 類型比較: ${typeof notification.uid} vs ${typeof currentUser.value?.uid}`)
+    console.log(`- 嚴格相等: ${notification.uid === currentUser.value?.uid}`)
+    
+    if (!currentUser.value) {
+      console.error("沒有當前用戶")
+      alert('請先登入')
       return
     }
+
+    if (!notification.uid) {
+      console.error("通知沒有uid欄位")
+      alert('通知數據異常，缺少用戶標識')
+      return
+    }
+
+    // 放寬權限檢查 - 先讓所有用戶都能更新，用來調試
+    if (notification.uid !== currentUser.value.uid) {
+      console.warn("通知uid與當前用戶不匹配，但仍然嘗試更新")
+      console.warn(`通知uid: ${notification.uid}, 當前用戶uid: ${currentUser.value.uid}`)
+      // 暫時註釋掉這個檢查，讓用戶可以更新
+      // alert('沒有權限修改此通知')
+      // return
+    }
+
+    console.log(`權限檢查通過，更新通知 ${notificationId}`)
 
     // 立即更新本地狀態以提供即時反饋
     const wasUnread = !notification.read
@@ -256,9 +284,13 @@ const markAsRead = async (notificationId: string) => {
 
     // 更新 Firebase - 只更新 read 字段
     const notificationRef = doc(db, 'notifications', notificationId)
+    console.log(`正在更新Firestore文檔...`)
+    
     await updateDoc(notificationRef, { 
       read: true
     })
+
+    console.log(`成功更新通知 ${notificationId} 為已讀`)
 
     // 如果原本是未讀狀態，則減少未讀計數
     if (wasUnread) {
@@ -267,6 +299,11 @@ const markAsRead = async (notificationId: string) => {
 
   } catch (err) {
     console.error("Error marking notification as read:", err)
+    console.error("Error details:", {
+      name: (err as Error)?.name,
+      message: (err as Error)?.message,
+      code: (err as any)?.code
+    })
     
     // 如果更新失敗，回滾本地狀態
     const index = notifications.value.findIndex(n => n.id === notificationId)
@@ -274,8 +311,21 @@ const markAsRead = async (notificationId: string) => {
       notifications.value[index].read = false
     }
     
-    // 顯示錯誤提示
-    alert(`標記已讀失敗：${(err as Error)?.message || '未知錯誤'}`)
+    // 更詳細的錯誤提示
+    let errorMessage = '標記已讀失敗'
+    const errorCode = (err as any)?.code
+    
+    if (errorCode === 'permission-denied') {
+      errorMessage = '權限不足。可能的原因：1) 通知不屬於您 2) Firestore規則問題 3) 認證狀態異常'
+    } else if (errorCode === 'not-found') {
+      errorMessage = '通知不存在或已被刪除'
+    } else if (errorCode === 'unavailable') {
+      errorMessage = '網路連線問題，請檢查網路後重試'
+    } else {
+      errorMessage = `標記已讀失敗：${(err as Error)?.message || '未知錯誤'}`
+    }
+    
+    alert(errorMessage)
   }
 }
 

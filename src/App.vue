@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
 .mountain-app {
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
   font-family: var(--font-body);
 }
 
@@ -124,6 +124,18 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 5;
   min-height: calc(100vh - 160px);
+  min-height: calc(100dvh - 160px); /* 使用動態視窗高度 */
+  overflow-x: hidden;
+  box-sizing: border-box;
+  /* 改善滾動體驗 */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* 防止橫向滾動 */
+  width: 100%;
+  max-width: 100%;
+  /* 確保完全居中且對稱 */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* 背景裝飾 */
@@ -206,6 +218,8 @@ onBeforeUnmount(() => {
   .main-content {
     padding-left: var(--space-sm);
     padding-right: var(--space-sm);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -213,6 +227,8 @@ onBeforeUnmount(() => {
   .main-content {
     padding-left: var(--space-md);
     padding-right: var(--space-md);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -221,6 +237,8 @@ onBeforeUnmount(() => {
     padding-left: var(--space-lg);
     padding-right: var(--space-lg);
     min-height: calc(100vh - 160px);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -228,6 +246,8 @@ onBeforeUnmount(() => {
   .main-content {
     padding-left: var(--space-xl);
     padding-right: var(--space-xl);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -235,6 +255,8 @@ onBeforeUnmount(() => {
   .main-content {
     padding-left: var(--space-2xl);
     padding-right: var(--space-2xl);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -243,6 +265,11 @@ onBeforeUnmount(() => {
   .main-content {
     padding-bottom: calc(var(--space-2xl) + 60px); /* 考慮底部導航 */
     min-height: calc(100vh - 120px);
+    min-height: calc(100dvh - 120px);
+    /* 確保移動端滾動順暢 */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    overscroll-behavior-x: none; /* 防止橫向彈跳 */
   }
   
   .background-decoration {
@@ -278,6 +305,7 @@ onBeforeUnmount(() => {
 @media (max-width: 480px) {
   .main-content {
     min-height: calc(100vh - 100px);
+    min-height: calc(100dvh - 100px);
   }
   
   .element-1 {
@@ -301,6 +329,8 @@ onBeforeUnmount(() => {
   .main-content {
     padding-top: 50px !important;
     padding-bottom: 60px;
+    min-height: calc(100vh - 100px);
+    min-height: calc(100dvh - 100px);
   }
   
   .background-decoration {
@@ -312,6 +342,10 @@ onBeforeUnmount(() => {
 @media (hover: none) and (pointer: coarse) {
   .main-content {
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    overscroll-behavior-x: none;
+    /* 改善觸控滾動性能 */
+    will-change: scroll-position;
   }
 }
 
@@ -386,23 +420,26 @@ onBeforeUnmount(() => {
   color: var(--stone-dark);
 }
 
-/* 滾動條樣式 */
+/* 完全隱藏滾動條 */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 0px;
+  background: transparent;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  background: transparent;
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(34, 197, 94, 0.3);
-  border-radius: 4px;
+  background: transparent;
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 197, 94, 0.5);
+  background: transparent;
+  display: none;
 }
 
 /* Focus 樣式改進 */
@@ -423,5 +460,57 @@ onBeforeUnmount(() => {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* 支援動態視窗單位 */
+@supports (height: 100dvh) {
+  .main-content {
+    min-height: calc(100dvh - 160px);
+  }
+  
+  @media (max-width: 768px) {
+    .main-content {
+      min-height: calc(100dvh - 120px);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .main-content {
+      min-height: calc(100dvh - 100px);
+    }
+  }
+  
+  @media (max-width: 768px) and (orientation: landscape) {
+    .main-content {
+      min-height: calc(100dvh - 100px);
+    }
+  }
+}
+
+/* 防止內容溢出 */
+.main-content > * {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* 確保所有子元素不會造成橫向滾動 */
+.main-content img,
+.main-content video,
+.main-content iframe,
+.main-content table {
+  max-width: 100%;
+  height: auto;
+}
+
+.main-content table {
+  overflow-x: auto;
+  display: block;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .main-content table {
+    font-size: 0.875rem;
+  }
 }
 </style>

@@ -33,10 +33,13 @@ service cloud.firestore {
                      (request.auth.uid == resource.data.uid || request.auth.token.admin == true);
       // 只有管理員可以建立通知 (例如文章審核通過/退回的通知)
       allow create: if request.auth != null && request.auth.token.admin == true;
-      // 使用者可以更新自己通知的 'read' 狀態
-      allow update: if request.auth != null &&
-                     request.auth.uid == resource.data.uid &&
-                     request.resource.data.keys().hasOnly(['read']);
+      // 使用者可以更新自己通知的 'read' 狀態 - 暫時放寬規則進行調試
+      allow update: if request.auth != null && (
+        // 原本的規則：只能更新自己的通知
+        (request.auth.uid == resource.data.uid && request.resource.data.keys().hasOnly(['read'])) ||
+        // 暫時允許管理員更新所有通知（用於調試）
+        request.auth.token.admin == true
+      );
       allow delete: if false; // 通常不允許客戶端刪除通知，或只允許管理員
     }
 

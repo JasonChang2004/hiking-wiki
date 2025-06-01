@@ -48,7 +48,7 @@
               <h3 class="article-title">{{ article.title }}</h3>
               
               <!-- 文章摘要 -->
-              <p class="article-excerpt">{{ getExcerpt(article.content) }}</p>
+              <p class="article-excerpt" v-html="getArticlePreview(article.content, 80)"></p>
               
               <!-- 元數據 -->
               <div class="article-meta">
@@ -89,18 +89,11 @@ import { ref, onMounted } from 'vue';
 import { db } from '@/firebase';
 import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import type { Article } from '@/types';
-import { formatDate } from '@/utils/formatters';
+import { formatDate, getArticlePreview } from '@/utils/formatters';
 
 const articles = ref<Article[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-
-// 取得文章摘要
-const getExcerpt = (content: string): string => {
-  if (!content) return '暫無內容描述...';
-  const plainText = content.replace(/<[^>]*>/g, ''); // 移除HTML標籤
-  return plainText.length > 80 ? plainText.substring(0, 80) + '...' : plainText;
-};
 
 const fetchFeaturedArticles = async () => {
   isLoading.value = true;
@@ -136,6 +129,9 @@ onMounted(() => {
 .mountain-featured-carousel {
   font-family: var(--font-body);
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* 載入狀態 */
@@ -148,6 +144,10 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  justify-content: center;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .loading-card {
@@ -257,6 +257,12 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md) 1rem;
+  box-sizing: border-box;
+  justify-content: center;
 }
 
 /* 精選卡片 */
@@ -266,7 +272,8 @@ onMounted(() => {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   animation: slideInUp 0.6s ease-out calc(var(--delay));
   animation-fill-mode: both;
@@ -275,7 +282,7 @@ onMounted(() => {
 
 .featured-card:hover {
   transform: translateY(-8px) scale(1.02);
-  box-shadow: var(--shadow-elevated);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border-color: var(--mountain-primary);
 }
 
@@ -345,16 +352,20 @@ onMounted(() => {
 }
 
 .article-excerpt {
-  font-size: 0.875rem;
   color: var(--stone-medium);
+  font-size: 0.875rem;
   line-height: 1.6;
   margin-bottom: 1rem;
-  flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 文章摘要中的超連結樣式 */
+.article-excerpt :deep(link) {
+  color: #0ea5e9;
+  font-weight: 500;
 }
 
 /* 元數據 */

@@ -112,13 +112,51 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,  // 優化滾動行為
-  scrollBehavior(_, _from, savedPosition) {
+  routes,
+  // 優化滾動行為
+  scrollBehavior(to, from, savedPosition) {
+    // 如果有保存的位置（例如從瀏覽器歷史返回）
     if (savedPosition) {
-      return savedPosition
-    } else {
-      return { top: 0 }
+      return new Promise((resolve) => {
+        // 延遲一點讓頁面完全載入
+        setTimeout(() => {
+          resolve(savedPosition)
+        }, 100)
+      })
     }
+    
+    // 如果是錨點連結
+    if (to.hash) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const element = document.querySelector(to.hash)
+          if (element) {
+            resolve({
+              el: to.hash,
+              behavior: 'smooth',
+              top: 80 // 考慮導航欄高度
+            })
+          } else {
+            resolve({ top: 0 })
+          }
+        }, 100)
+      })
+    }
+    
+    // 同一頁面內的路由變化（例如分頁）
+    if (to.path === from.path && to.query !== from.query) {
+      return false // 保持當前位置
+    }
+    
+    // 其他情況滾動到頂部
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ 
+          top: 0, 
+          behavior: 'smooth' 
+        })
+      }, 100)
+    })
   }
 })
 

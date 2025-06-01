@@ -105,7 +105,7 @@
             <!-- 主要內容 -->
             <div class="article-content">
               <h3 class="article-title">{{ article.title }}</h3>
-              <p class="article-excerpt">{{ getExcerpt(article.content) }}</p>
+              <p class="article-excerpt" v-html="getArticlePreview(article.content)"></p>
             </div>
 
             <!-- 卡片底部 -->
@@ -142,6 +142,7 @@ import { ref, computed, onMounted } from 'vue'
 import { db } from '../../firebase'
 import { collection, getDocs, query, where, orderBy, limit, startAfter } from 'firebase/firestore'
 import { formatDate } from '../../utils/formatters'
+import { getArticlePreview } from '../../utils/formatters'
 import type { Article } from '../../types'
 
 const articles = ref<Article[]>([])
@@ -175,13 +176,6 @@ const getCategoryIcon = (category: string): string => {
     '一般': '📄'
   };
   return icons[category] || '📄';
-};
-
-// 取得文章摘要
-const getExcerpt = (content: string): string => {
-  if (!content) return '暫無內容描述...';
-  const plainText = content.replace(/<[^>]*>/g, ''); // 移除HTML標籤
-  return plainText.length > 120 ? plainText.substring(0, 120) + '...' : plainText;
 };
 
 // 篩選文章
@@ -294,6 +288,9 @@ onMounted(() => {
 .mountain-article-list {
   font-family: var(--font-body);
   max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* 搜尋與篩選區域 */
@@ -302,6 +299,10 @@ onMounted(() => {
   gap: 1rem;
   margin-bottom: 2rem;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 var(--space-md);
+  box-sizing: border-box;
 }
 
 .search-container {
@@ -391,9 +392,13 @@ onMounted(() => {
 
 .loading-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  justify-content: center;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .loading-article-card {
@@ -464,7 +469,7 @@ onMounted(() => {
 /* 文章區域 */
 .results-header {
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
   padding: 1rem;
@@ -473,6 +478,9 @@ onMounted(() => {
   border: 1px solid rgba(229, 231, 235, 0.3);
   flex-wrap: wrap;
   gap: 1rem;
+  width: 100%;
+  max-width: 1200px;
+  box-sizing: border-box;
 }
 
 .results-count {
@@ -507,8 +515,13 @@ onMounted(() => {
 /* 文章網格 */
 .article-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md) 1rem;
+  box-sizing: border-box;
 }
 
 /* 文章卡片 */
@@ -518,7 +531,8 @@ onMounted(() => {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   animation: slideInUp 0.6s ease-out calc(var(--delay));
   animation-fill-mode: both;
@@ -526,7 +540,7 @@ onMounted(() => {
 
 .article-card:hover {
   transform: translateY(-8px);
-  box-shadow: var(--shadow-elevated);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border-color: var(--mountain-primary);
 }
 
@@ -592,6 +606,12 @@ onMounted(() => {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 文章摘要中的超連結樣式 */
+.article-excerpt :deep(link) {
+  color: #0ea5e9;
+  font-weight: 500;
 }
 
 .article-footer {
@@ -694,17 +714,29 @@ onMounted(() => {
   .search-filter-section {
     flex-direction: column;
     gap: 0.75rem;
+    padding: 0 var(--space-sm);
   }
   
   .results-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 0.75rem;
+    padding: 0 var(--space-sm);
+    margin: 0 var(--space-sm) 1.5rem;
+  }
+  
+  .results-count {
+    justify-content: flex-start;
+  }
+  
+  .sort-options {
+    align-self: flex-end;
   }
   
   .article-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+    padding: 0 var(--space-sm);
   }
   
   .article-content {
@@ -717,6 +749,19 @@ onMounted(() => {
 }
 
 @media (max-width: 480px) {
+  .search-filter-section {
+    padding: 0 var(--space-xs);
+  }
+  
+  .results-header {
+    padding: 0 var(--space-xs);
+    margin: 0 var(--space-xs) 1.5rem;
+  }
+  
+  .article-grid {
+    padding: 0 var(--space-xs);
+  }
+  
   .search-input {
     padding: 0.625rem 1rem 0.625rem 2.25rem;
   }

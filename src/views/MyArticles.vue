@@ -390,6 +390,10 @@ onUnmounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  justify-content: center;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .loading-card {
@@ -518,6 +522,9 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .stat-card {

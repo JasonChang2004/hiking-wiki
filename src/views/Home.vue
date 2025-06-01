@@ -44,7 +44,9 @@
     <!-- 特色功能區塊 -->
     <section class="features-section">
       <div class="container">
-        <h2 class="section-title">🌟 平台特色</h2>
+        <div class="section-header">
+          <h2 class="section-title">🌟 平台特色</h2>
+        </div>
         <div class="features-grid">
           <div class="feature-card animate-slide-up">
             <div class="feature-icon gradient-mountain">🗺️</div>
@@ -175,10 +177,10 @@ const CategoryGrid = defineAsyncComponent({
 /* Hero 區塊 - 山林主題 */
 .hero-section {
   position: relative;
-  min-height: 60vh;
+  min-height: 50vh;
   display: flex;
   align-items: center;
-  padding: var(--space-4xl) 0 var(--space-3xl);
+  padding: var(--space-xl) 0 var(--space-lg);
   background: linear-gradient(135deg, 
     var(--mountain-50) 0%,
     var(--sky-50) 50%,
@@ -299,7 +301,7 @@ const CategoryGrid = defineAsyncComponent({
 
 /* 特色功能區塊 */
 .features-section {
-  padding: var(--space-4xl) 0;
+  padding: var(--space-xl) 0;
   background: rgba(255, 255, 255, 0.8);
 }
 
@@ -308,6 +310,10 @@ const CategoryGrid = defineAsyncComponent({
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-xl);
   margin-top: var(--space-2xl);
+  justify-content: center;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .feature-card {
@@ -317,13 +323,13 @@ const CategoryGrid = defineAsyncComponent({
   border-radius: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .feature-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .feature-icon {
@@ -367,7 +373,7 @@ const CategoryGrid = defineAsyncComponent({
 
 /* 分類導覽 */
 .categories-section {
-  padding: var(--space-4xl) 0;
+  padding: var(--space-xl) 0;
   background: linear-gradient(135deg, 
     var(--sky-50) 0%,
     var(--mountain-50) 100%
@@ -376,13 +382,13 @@ const CategoryGrid = defineAsyncComponent({
 
 /* 精選文章區塊 */
 .featured-section {
-  padding: var(--space-4xl) 0;
+  padding: var(--space-xl) 0;
   background: rgba(255, 255, 255, 0.8);
 }
 
 /* 最新文章列表 */
 .latest-section {
-  padding: var(--space-4xl) 0 var(--space-3xl);
+  padding: var(--space-xl) 0 var(--space-lg);
   background: linear-gradient(135deg, 
     var(--earth-50) 0%,
     var(--mountain-50) 100%
@@ -392,7 +398,7 @@ const CategoryGrid = defineAsyncComponent({
 /* 通用區塊樣式 */
 .section-header {
   text-align: center;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-md);
 }
 
 .section-title {
@@ -413,6 +419,17 @@ const CategoryGrid = defineAsyncComponent({
 
 .section-actions {
   margin-top: var(--space-lg);
+}
+
+/* 容器佈局修正 */
+.category-container,
+.featured-container,
+.latest-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  box-sizing: border-box;
 }
 
 .view-all-link {
@@ -502,14 +519,14 @@ const CategoryGrid = defineAsyncComponent({
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
-}
-
+  }
+  
 /* 動畫效果 */
 .animate-slide-up {
   animation: slideUp 0.6s ease-out;
   animation-fill-mode: both;
-}
-
+  }
+  
 .animate-slide-up:nth-child(1) { animation-delay: 0.1s; }
 .animate-slide-up:nth-child(2) { animation-delay: 0.2s; }
 .animate-slide-up:nth-child(3) { animation-delay: 0.3s; }
@@ -529,8 +546,8 @@ const CategoryGrid = defineAsyncComponent({
 /* 響應式設計 */
 @media (max-width: 768px) {
   .hero-section {
-    min-height: 50vh;
-    padding: var(--space-3xl) 0 var(--space-2xl);
+    min-height: 40vh;
+    padding: var(--space-lg) 0 var(--space-md);
   }
   
   .hero-title {
@@ -574,6 +591,21 @@ const CategoryGrid = defineAsyncComponent({
   
   .feature-card {
     padding: var(--space-xl) var(--space-md);
+  }
+  
+  /* 縮減移動端各區塊間距 */
+  .features-section,
+  .categories-section,
+  .featured-section {
+    padding: var(--space-lg) 0;
+  }
+  
+  .latest-section {
+    padding: var(--space-lg) 0 var(--space-md);
+  }
+  
+  .section-header {
+    margin-bottom: var(--space-sm);
   }
 }
 

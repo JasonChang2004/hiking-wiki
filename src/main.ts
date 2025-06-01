@@ -8,6 +8,48 @@ import './assets/globals.css'
 import { createPinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 
+// 開發模式下的調試工具
+if (import.meta.env.DEV) {
+  import('./firebase').then(({ db }) => {
+    import('firebase/firestore').then(({ collection, getDocs, query, orderBy }) => {
+      // 全域調試函數
+      (window as any).debugFirebaseArticles = async () => {
+        try {
+          console.log('🔍 開始檢查 Firebase 文章資料...')
+          
+          // 查詢所有文章（不過濾狀態）
+          const allQuery = query(collection(db, 'articles'), orderBy('createdAt', 'desc'))
+          const allSnapshot = await getDocs(allQuery)
+          const allArticles = allSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+          
+          console.log(`📊 總共找到 ${allArticles.length} 篇文章`)
+          
+          // 按狀態分組
+          const statusGroups = allArticles.reduce((groups: any, article: any) => {
+            const status = article.status || 'unknown'
+            if (!groups[status]) groups[status] = []
+            groups[status].push(article)
+            return groups
+          }, {})
+          
+          Object.entries(statusGroups).forEach(([status, articles]) => {
+            console.log(`📝 狀態「${status}」: ${(articles as any[]).length} 篇`)
+            ;(articles as any[]).forEach((article: any, index: number) => {
+              console.log(`  ${index + 1}. ${article.title} (分類: ${article.category})`)
+            })
+          })
+          
+          return allArticles
+        } catch (error) {
+          console.error('❌ 檢查文章資料失敗:', error)
+        }
+      }
+      
+      console.log('🛠️ 調試工具已載入，使用 debugFirebaseArticles() 檢查文章資料')
+    })
+  })
+}
+
 const routes = [
   { 
     path: '/', 

@@ -8,9 +8,8 @@ import { formatDateTime } from '../utils/formatters' // 使用新的 formatDateT
 import type { Article } from '../types' // 使用新的型別定義
 
 const route = useRoute()
-const article = ref<Article | null>(null)
 const loading = ref(true)
-const shareNotification = ref(false)
+const article = ref<Article | null>(null)
 
 const renderedHtml = computed(() => {
   if (!article.value?.content) return '';
@@ -23,14 +22,47 @@ const renderedHtml = computed(() => {
 });
 
 // 複製分享連結
-const copyShareLink = () => {
-  const url = window.location.href;
-  navigator.clipboard.writeText(url).then(() => {
-    shareNotification.value = true;
-    setTimeout(() => {
-      shareNotification.value = false;
-    }, 3000);
-  });
+const copyShareLink = async () => {
+  try {
+    const url = window.location.href;
+    console.log('開始分享連結:', url);
+    
+    // 嘗試使用現代 Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(url);
+      console.log('使用 Clipboard API 複製成功');
+      alert('✅ 文章連結已複製到剪貼板！');
+    } else {
+      // 備用方案：使用傳統方法
+      console.log('使用傳統方法複製');
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        console.log('傳統方法複製結果:', successful);
+        if (successful) {
+          alert('✅ 文章連結已複製到剪貼板！');
+        } else {
+          throw new Error('execCommand 失敗');
+        }
+      } catch (err) {
+        console.error('複製失敗:', err);
+        alert('複製連結失敗，請手動複製網址列的連結');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+  } catch (error) {
+    console.error('分享連結時發生錯誤:', error);
+    alert('複製連結失敗，請手動複製網址列的連結');
+  }
 }
 
 // 列印文章
@@ -306,16 +338,6 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-
-    <!-- 分享成功通知 -->
-    <Transition name="notification">
-      <div v-if="shareNotification" class="share-notification">
-        <div class="notification-content">
-          <span class="notification-icon">✅</span>
-          <span class="notification-text">文章連結已複製到剪貼板</span>
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -1078,52 +1100,6 @@ onMounted(async () => {
   text-decoration: none;
 }
 
-/* 分享通知 */
-.share-notification {
-  position: fixed;
-  top: 2rem;
-  right: 2rem;
-  z-index: 1000;
-  background: rgba(34, 197, 94, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  border-radius: 0.75rem;
-  box-shadow: var(--shadow-elevated);
-}
-
-.notification-content {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  color: white;
-}
-
-.notification-icon {
-  font-size: 1.125rem;
-}
-
-.notification-text {
-  font-weight: 500;
-  font-family: var(--font-display);
-}
-
-/* 通知動畫 */
-.notification-enter-active,
-.notification-leave-active {
-  transition: all 0.3s ease;
-}
-
-.notification-enter-from {
-  opacity: 0;
-  transform: translateX(100%);
-}
-
-.notification-leave-to {
-  opacity: 0;
-  transform: translateX(100%);
-}
-
 /* 動畫 */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
@@ -1215,12 +1191,6 @@ onMounted(async () => {
     flex-direction: column;
     align-items: center;
   }
-  
-  .share-notification {
-    top: 1rem;
-    right: 1rem;
-    left: 1rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1263,7 +1233,6 @@ onMounted(async () => {
 /* 列印樣式 */
 @media print {
   .article-sidebar,
-  .share-notification,
   .footer-actions {
     display: none !important;
   }

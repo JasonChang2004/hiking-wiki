@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 🔐 使用者文件：任何登入者可讀取自己的個人資料，並且只能寫入自己的資料。
+    // 管理員相關的特殊權限（如修改他人資料）應謹慎處理，或透過 Cloud Functions 實現。
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      // 允許使用者讀取自己的 isAdmin 狀態，或允許管理員讀取所有使用者資料
+      // allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+      allow write: if request.auth != null && request.auth.uid == userId;
+      // 如果需要讓管理員可以更新使用者的 isAdmin 狀態（例如透過後台介面）
+      // 則需要更細緻的規則，例如：
+      // allow update: if request.auth != null && (request.auth.uid == userId ||
+      // (request.auth.token.admin == true && request.resource.data.keys().hasAny(['isAdmin'])));
+    }
+
+    // 📘 文章文件：
+    match /articles/{articleId} {
+      allow read: if true; // 任何人都可以讀取文章
+      allow create: if request.auth != null;  // 登入者可以投稿 (status 預設應為 pending)
+      // 只有 token 中有 admin:true 宣告的使用者可以更新文章 (例如變更 status, isFeatured)
+      allow update: if request.auth != null && request.auth.token.admin == true;
+      // 只有管理員可以刪除文章 (目前設定為 false，若要開放則改為 admin 判斷)
+      allow delete: if request.auth != null && request.auth.token.admin == true; // 或者 if false;
+    }
+
+    // 🔔 通知文件：
+    match /notifications/{notificationId} {
+      // 使用者可以讀取自己的通知，管理員可以讀取所有通知 (用於聚合查詢或後台管理)
+      allow read: if request.auth != null &&
+                     (request.auth.uid == resource.data.uid || request.auth.token.admin == true);
+      // 只有管理員可以建立通知 (例如文章審核通過/退回的通知)
+      allow create: if request.auth != null && request.auth.token.admin == true;
+      // 使用者可以更新自己通知的 'read' 狀態
+      allow update: if request.auth != null &&
+                     request.auth.uid == resource.data.uid &&
+                     request.resource.data.keys().hasOnly(['read']);
+      allow delete: if false; // 通常不允許客戶端刪除通知，或只允許管理員
+    }
+
+    // ✋ 其他所有未明確定義路徑的文件預設關閉所有讀寫權限
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

@@ -1,11 +1,12 @@
 <template>
-  <div class="rich-text-editor">
+  <div class="rich-text-editor" @click.stop>
     <div class="editor-toolbar">
       <div class="toolbar-group">
         <!-- 格式按鈕 -->
         <button
           type="button"
-          @click="format('bold')"
+          @mousedown.prevent
+          @click.stop="handleFormatClick('bold')"
           :class="{ 'active': isFormatActive('bold') }"
           class="format-btn"
           title="粗體 (Ctrl+B)"
@@ -14,7 +15,8 @@
         </button>
         <button
           type="button"
-          @click="format('italic')"
+          @mousedown.prevent
+          @click.stop="handleFormatClick('italic')"
           :class="{ 'active': isFormatActive('italic') }"
           class="format-btn"
           title="斜體 (Ctrl+I)"
@@ -23,7 +25,8 @@
         </button>
         <button
           type="button"
-          @click="format('underline')"
+          @mousedown.prevent
+          @click.stop="handleFormatClick('underline')"
           :class="{ 'active': isFormatActive('underline') }"
           class="format-btn"
           title="底線 (Ctrl+U)"
@@ -32,7 +35,8 @@
         </button>
         <button
           type="button"
-          @click="format('strike')"
+          @mousedown.prevent
+          @click.stop="handleFormatClick('strike')"
           :class="{ 'active': isFormatActive('strike') }"
           class="format-btn"
           title="刪除線"
@@ -45,7 +49,7 @@
 
       <div class="toolbar-group">
         <!-- 標題 -->
-        <select @change="formatHeader" class="header-select" title="標題">
+        <select @change="formatHeader" @click.stop class="header-select" title="標題">
           <option value="">一般文字</option>
           <option value="1">標題 1</option>
           <option value="2">標題 2</option>
@@ -60,7 +64,7 @@
         <!-- 對齊 -->
         <button
           type="button"
-          @click="format('align', '')"
+          @click.stop="format('align', '')"
           :class="{ 'active': isAlignActive('') }"
           class="format-btn"
           title="靠左對齊"
@@ -69,7 +73,7 @@
         </button>
         <button
           type="button"
-          @click="format('align', 'center')"
+          @click.stop="format('align', 'center')"
           :class="{ 'active': isAlignActive('center') }"
           class="format-btn"
           title="置中對齊"
@@ -78,7 +82,7 @@
         </button>
         <button
           type="button"
-          @click="format('align', 'right')"
+          @click.stop="format('align', 'right')"
           :class="{ 'active': isAlignActive('right') }"
           class="format-btn"
           title="靠右對齊"
@@ -87,7 +91,7 @@
         </button>
         <button
           type="button"
-          @click="format('align', 'justify')"
+          @click.stop="format('align', 'justify')"
           :class="{ 'active': isAlignActive('justify') }"
           class="format-btn"
           title="兩端對齊"
@@ -102,7 +106,7 @@
         <!-- 列表 -->
         <button
           type="button"
-          @click="format('list', 'ordered')"
+          @click.stop="format('list', 'ordered')"
           :class="{ 'active': isListActive('ordered') }"
           class="format-btn"
           title="數字列表"
@@ -111,7 +115,7 @@
         </button>
         <button
           type="button"
-          @click="format('list', 'bullet')"
+          @click.stop="format('list', 'bullet')"
           :class="{ 'active': isListActive('bullet') }"
           class="format-btn"
           title="項目列表"
@@ -126,7 +130,7 @@
         <!-- 其他功能 -->
         <button
           type="button"
-          @click="insertLink"
+          @click.stop="insertLink"
           class="format-btn"
           title="插入連結"
         >
@@ -134,7 +138,7 @@
         </button>
         <button
           type="button"
-          @click="format('blockquote')"
+          @click.stop="format('blockquote')"
           :class="{ 'active': isFormatActive('blockquote') }"
           class="format-btn"
           title="引用"
@@ -143,7 +147,7 @@
         </button>
         <button
           type="button"
-          @click="format('code-block')"
+          @click.stop="format('code-block')"
           class="format-btn"
           title="程式碼區塊"
         >
@@ -152,14 +156,17 @@
       </div>
     </div>
 
-    <QuillEditor
-      ref="quillEditor"
-      v-model:content="content"
-      :options="editorOptions"
-      @update:content="onContentChange"
-      @selection-change="onSelectionChange"
-      content-type="html"
-    />
+    <div class="editor-container" @click.stop>
+      <QuillEditor
+        ref="quillEditor"
+        v-model:content="content"
+        :options="editorOptions"
+        @update:content="onContentChange"
+        @selection-change="onSelectionChange"
+        @blur="onEditorBlur"
+        content-type="html"
+      />
+    </div>
   </div>
 </template>
 
@@ -192,6 +199,8 @@ const currentFormat = ref<any>({})
 const editorOptions = {
   theme: 'snow',
   placeholder: props.placeholder,
+  readOnly: false,
+  bounds: '.rich-text-editor', // 限制編輯器在容器內
   modules: {
     toolbar: false, // 我們使用自定義工具欄
     keyboard: {
@@ -199,28 +208,46 @@ const editorOptions = {
         bold: {
           key: 'B',
           ctrlKey: true,
-          handler: function() {
-            format('bold');
+          handler: function(range: any, context: any) {
+            if (range) {
+              format('bold');
+            }
             return false; // 防止預設行為
           }
         },
         italic: {
           key: 'I',
           ctrlKey: true,
-          handler: function() {
-            format('italic');
+          handler: function(range: any, context: any) {
+            if (range) {
+              format('italic');
+            }
             return false; // 防止預設行為
           }
         },
         underline: {
           key: 'U',
           ctrlKey: true,
-          handler: function() {
-            format('underline');
+          handler: function(range: any, context: any) {
+            if (range) {
+              format('underline');
+            }
             return false; // 防止預設行為
+          }
+        },
+        // 禁用 Tab 鍵的默認行為，讓它可以用於表單導航
+        tab: {
+          key: 'Tab',
+          handler: function() {
+            return true; // 允許默認的 Tab 行為（表單導航）
           }
         }
       }
+    },
+    history: {
+      delay: 2000,
+      maxStack: 500,
+      userOnly: true
     }
   }
 }
@@ -234,16 +261,44 @@ watch(() => props.modelValue, (newValue) => {
 
 // 內容變化時通知父組件
 const onContentChange = (value: string) => {
-  content.value = value
-  emit('update:modelValue', value)
+  // 避免在內容變化時強制聚焦
+  if (content.value !== value) {
+    content.value = value
+    emit('update:modelValue', value)
+  }
 }
 
 // 選擇變化時更新格式狀態
 const onSelectionChange = (range: any) => {
+  // 只有當範圍確實存在且編輯器存在時才更新格式
   if (range && quillEditor.value) {
     const quill = quillEditor.value.getQuill()
-    currentFormat.value = quill.getFormat(range.index, range.length)
+    try {
+      currentFormat.value = quill.getFormat(range.index, range.length)
+    } catch (error) {
+      // 忽略格式獲取錯誤，避免干擾其他操作
+      console.warn('格式獲取失敗，但這不影響功能:', error)
+    }
   }
+}
+
+// 處理格式按鈕的點擊
+const handleFormatClick = (formatType: string) => {
+  if (!quillEditor.value) return
+  
+  const quill = quillEditor.value.getQuill()
+  
+  // 如果沒有選擇範圍，先聚焦到編輯器末尾
+  let selection = quill.getSelection()
+  if (!selection) {
+    quill.focus()
+    const length = quill.getLength()
+    quill.setSelection(length, 0)
+    selection = quill.getSelection()
+  }
+  
+  // 現在執行格式化
+  format(formatType)
 }
 
 // 格式化函數
@@ -252,8 +307,11 @@ const format = (formatType: string, value?: any) => {
   
   const quill = quillEditor.value.getQuill()
   
-  // 確保編輯器有焦點
-  quill.focus()
+  // 確保有選擇範圍
+  const selection = quill.getSelection()
+  if (!selection) {
+    return
+  }
   
   switch (formatType) {
     case 'bold':
@@ -337,6 +395,11 @@ onMounted(() => {
     }
   }
 })
+
+// 處理編輯器 blur 事件
+const onEditorBlur = () => {
+  // 處理編輯器 blur 事件的邏輯
+}
 </script>
 
 <style scoped>
@@ -355,6 +418,11 @@ onMounted(() => {
   border-bottom: 1px solid #e5e7eb;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.editor-container {
+  position: relative;
+  background: white;
 }
 
 .toolbar-group {

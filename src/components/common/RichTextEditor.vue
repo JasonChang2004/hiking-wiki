@@ -208,7 +208,7 @@ const editorOptions = {
         bold: {
           key: 'B',
           ctrlKey: true,
-          handler: function(range: any, context: any) {
+          handler: function(range: any) {
             if (range) {
               format('bold');
             }
@@ -218,7 +218,7 @@ const editorOptions = {
         italic: {
           key: 'I',
           ctrlKey: true,
-          handler: function(range: any, context: any) {
+          handler: function(range: any) {
             if (range) {
               format('italic');
             }
@@ -228,7 +228,7 @@ const editorOptions = {
         underline: {
           key: 'U',
           ctrlKey: true,
-          handler: function(range: any, context: any) {
+          handler: function(range: any) {
             if (range) {
               format('underline');
             }

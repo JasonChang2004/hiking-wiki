@@ -70,7 +70,7 @@ export const markdownToPlainText = (content: string, maxLength?: number): string
     // 移除代碼塊 (```code```)
     .replace(/```[\s\S]*?```/g, '')
     // 處理圖片 ![alt](url) - 顯示為 [圖片: alt]
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, (match, alt) => {
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, (_match, alt) => {
       return alt ? `[圖片: ${alt}]` : '[圖片]'
     })
     // 處理連結 [text](url) 或 [text][ref] - 保留連結文字

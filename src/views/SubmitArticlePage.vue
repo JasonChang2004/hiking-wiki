@@ -212,8 +212,7 @@ import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebas
 import type { Article } from '@/types'
 import DOMPurify from 'dompurify';
 import { useRoute, useRouter } from 'vue-router'
-import RichTextEditor from '@/components/common/RichTextEditor.vue'
-import { htmlToMarkdown } from '@/utils/htmlMarkdownConverter'
+// Removed import RichTextEditor from '@/components/common/RichTextEditor.vue'
 
 const route = useRoute() // Added for editing
 const router = useRouter() // Added for editing
@@ -229,6 +228,7 @@ const submitting = ref(false); // Add submitting state
 const contentTextarea = ref<HTMLTextAreaElement | null>(null)
 const imageInput = ref<HTMLInputElement | null>(null) // 圖片上傳輸入框引用
 const uploadingImage = ref(false) // 圖片上傳狀態
+let updateTimer: number | null = null; // Defined updateTimer as number | null
 
 // 富文本編輯器相關 - 暫時保留但不使用
 const editorMode = ref<'rich' | 'markdown'>('markdown') // 改為 markdown 模式
@@ -251,46 +251,10 @@ const parsedMarkdown = computed(() => {
   return DOMPurify.sanitize(dirty, { USE_PROFILES: { html: true } });
 })
 
-// 表單驗證計算屬性
-const isFormValid = computed(() => {
-  const hasRequiredFields = title.value.trim() && content.value.trim() && category.value
-  const hasAgreement = agreeTerms.value || articleId.value // 編輯時不需要重新同意條款
-  return hasRequiredFields && hasAgreement && !submitting.value
-})
-
 // 是否需要顯示同意條款（新文章需要，編輯文章不需要）
 const needsAgreement = computed(() => {
   return !articleId.value
 })
-
-// 富文本編輯器內容變化處理
-let updateTimer: ReturnType<typeof setTimeout> | null = null
-
-const onRichTextChange = (htmlValue: string) => {
-  // 立即更新 HTML 內容
-  htmlContent.value = htmlValue
-  
-  // 防抖更新 Markdown 內容，避免頻繁轉換
-  if (updateTimer) {
-    clearTimeout(updateTimer)
-  }
-  
-  updateTimer = setTimeout(() => {
-    try {
-      const markdownValue = htmlToMarkdown(htmlValue)
-      // 只有當內容確實不同時才更新
-      if (content.value !== markdownValue) {
-        content.value = markdownValue
-      }
-    } catch (error) {
-      console.error('HTML 轉 Markdown 轉換錯誤:', error);
-      // 轉換失敗時，只有當內容確實不同時才使用原始 HTML
-      if (content.value !== htmlValue) {
-        content.value = htmlValue
-      }
-    }
-  }, 300) // 300ms 防抖延遲
-}
 
 // Function to load article for editing
 const loadArticleForEdit = async (id: string) => {
@@ -401,12 +365,6 @@ const submitArticle = async () => {
 }
 
 const resetForm = () => {
-  // 清理更新計時器
-  if (updateTimer) {
-    clearTimeout(updateTimer)
-    updateTimer = null
-  }
-  
   title.value = ''
   content.value = ''
   htmlContent.value = ''
@@ -521,11 +479,10 @@ const uploadImageToStorage = async (file: File): Promise<string> => {
   
   const fileRef = storageRef(storage, fileName)
   const uploadTask = uploadBytesResumable(fileRef, compressedFile)
-  
+
   return new Promise((resolve, reject) => {
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
+    uploadTask.on('state_changed',
+      () => { // Removed snapshot
         // 可以在這裡顯示上傳進度
       },
       (error) => {

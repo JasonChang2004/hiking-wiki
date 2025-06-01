@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { storage } from '@/firebase'
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
 
@@ -185,7 +185,7 @@ const uploadFile = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     uploadTask.on(
       'state_changed',
-      (snapshot) => {
+      () => {
         // 這裡可以更新單個文件的進度，目前使用整體進度
       },
       (error) => {
@@ -295,4 +295,4 @@ const getFilePathFromUrl = (url: string): string => {
 .remove-button:hover {
   @apply scale-110;
 }
-</style> 
+</style>

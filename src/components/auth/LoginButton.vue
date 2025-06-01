@@ -34,6 +34,15 @@
         
         <!-- 在線狀態指示器 -->
         <div class="online-indicator"></div>
+        
+        <!-- 通知徽章 -->
+        <div 
+          v-if="totalNotificationCount > 0" 
+          class="notification-bubble"
+          :title="getNotificationTooltip()"
+        >
+          {{ totalNotificationCount > 99 ? '99+' : totalNotificationCount }}
+        </div>
       </div>
       
       <!-- 下拉箭頭 -->
@@ -135,7 +144,13 @@
             >
               <span class="menu-icon">📋</span>
               <span class="menu-text">內容審核</span>
-              <span class="menu-arrow">→</span>
+              <span
+                v-if="adminStore.pendingArticlesCount > 0"
+                class="pending-badge"
+              >
+                {{ adminStore.pendingArticlesCount > 99 ? '99+' : adminStore.pendingArticlesCount }}
+              </span>
+              <span v-else class="menu-arrow">→</span>
             </router-link>
           </div>
         </div>
@@ -156,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { auth, db } from '../../firebase'
 import { 
   signOut, 
@@ -166,12 +181,42 @@ import type { User } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import type { UserProfile } from '../../types'
 import { useNotificationsStore } from '@/store/notifications'
+import { useAdminStore } from '@/store/admin'
 
 const user = ref<User | null>(null)
 const userProfile = ref<UserProfile | null>(null)
 const isDropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 const notificationsStore = useNotificationsStore()
+const adminStore = useAdminStore()
+
+// 計算總通知數量（未讀通知 + 管理員待審核文章）
+const totalNotificationCount = computed(() => {
+  let count = notificationsStore.unreadCount
+  
+  // 如果是管理員，加上待審核文章數量
+  if (userProfile.value?.isAdmin) {
+    count += adminStore.pendingArticlesCount
+  }
+  
+  return count
+})
+
+// 通知提示文字
+const getNotificationTooltip = () => {
+  const unreadCount = notificationsStore.unreadCount
+  const pendingCount = adminStore.pendingArticlesCount
+  
+  const messages = []
+  if (unreadCount > 0) {
+    messages.push(`${unreadCount} 則未讀通知`)
+  }
+  if (userProfile.value?.isAdmin && pendingCount > 0) {
+    messages.push(`${pendingCount} 篇待審核文章`)
+  }
+  
+  return messages.join('，')
+}
 
 // 獲取用戶名稱首字母
 const getInitial = (): string => {
@@ -207,6 +252,9 @@ const logout = async () => {
     await signOut(auth)
     userProfile.value = null
     closeDropdown()
+    // 登出時重置store
+    notificationsStore.resetUnread()
+    adminStore.resetPendingCount()
   } catch (error) {
     console.error("登出失敗:", error)
   }
@@ -233,8 +281,19 @@ onMounted(() => {
         await setDoc(userDocRef, newUserProfileData, { merge: true })
         userProfile.value = { id: u.uid, ...newUserProfileData }
       }
+      
+      // 載入通知
+      await notificationsStore.fetchUnreadCount()
+      
+      // 如果是管理員，載入待審核文章計數
+      if (userProfile.value?.isAdmin) {
+        await adminStore.fetchPendingArticlesCount()
+      }
     } else {
       userProfile.value = null
+      // 登出時重置store
+      notificationsStore.resetUnread()
+      adminStore.resetPendingCount()
     }
   })
 
@@ -373,6 +432,39 @@ onUnmounted(() => {
   border: 2px solid white;
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 通知徽章 */
+.notification-bubble {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  z-index: 10;
+  animation: notificationPulse 2s infinite;
+  padding: 0 0.125rem;
+}
+
+@keyframes notificationPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  }
+  50% { 
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.6);
+  }
 }
 
 /* 下拉箭頭 */
@@ -578,6 +670,18 @@ onUnmounted(() => {
 .notification-badge {
   padding: 0.125rem 0.375rem;
   background: linear-gradient(135deg, var(--earth-primary), var(--earth-secondary));
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  margin-left: auto;
+  animation: pulse 2s infinite;
+}
+
+/* 待審核徽章 */
+.pending-badge {
+  padding: 0.125rem 0.375rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
   font-size: 0.625rem;
   font-weight: 600;

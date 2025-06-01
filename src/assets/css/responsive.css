@@ -1,0 +1,316 @@
+/* 響應式設計系統 - 登山知識Wiki */
+
+/* 響應式斷點 */
+:root {
+  /* 斷點定義 */
+  --breakpoint-xs: 320px;   /* 極小手機 */
+  --breakpoint-sm: 480px;   /* 小手機 */
+  --breakpoint-md: 768px;   /* 平板 */
+  --breakpoint-lg: 1024px;  /* 小桌面 */
+  --breakpoint-xl: 1280px;  /* 大桌面 */
+  --breakpoint-2xl: 1536px; /* 超大桌面 */
+
+  /* 容器最大寬度 */
+  --container-xs: 100%;
+  --container-sm: 100%;
+  --container-md: 100%;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+
+  /* 響應式間距系統 */
+  --space-xs: 0.25rem;    /* 4px */
+  --space-sm: 0.5rem;     /* 8px */
+  --space-md: 1rem;       /* 16px */
+  --space-lg: 1.5rem;     /* 24px */
+  --space-xl: 2rem;       /* 32px */
+  --space-2xl: 3rem;      /* 48px */
+  --space-3xl: 4rem;      /* 64px */
+  --space-4xl: 6rem;      /* 96px */
+
+  /* 響應式字體大小 */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  --text-5xl: 3rem;       /* 48px */
+
+  /* 響應式行高 */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+}
+
+/* 響應式容器 */
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+/* 響應式網格系統 */
+.grid {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* 響應式Flexbox */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+/* 響應式顯示控制 */
+.hidden { display: none !important; }
+.block { display: block !important; }
+.inline-block { display: inline-block !important; }
+.flex { display: flex !important; }
+
+/* 小手機 (320px+) */
+@media (min-width: 320px) {
+  .container {
+    max-width: var(--container-xs);
+    padding-left: var(--space-sm);
+    padding-right: var(--space-sm);
+  }
+  
+  .grid {
+    gap: var(--space-sm);
+  }
+  
+  .xs\:hidden { display: none !important; }
+  .xs\:block { display: block !important; }
+  .xs\:flex { display: flex !important; }
+  .xs\:grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+  .xs\:text-sm { font-size: var(--text-sm); }
+  .xs\:text-base { font-size: var(--text-base); }
+  .xs\:text-lg { font-size: var(--text-lg); }
+  .xs\:text-xl { font-size: var(--text-xl); }
+  .xs\:text-2xl { font-size: var(--text-2xl); }
+  .xs\:text-3xl { font-size: var(--text-3xl); }
+}
+
+/* 大手機 (480px+) */
+@media (min-width: 480px) {
+  .container {
+    max-width: var(--container-sm);
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+  
+  .sm\:hidden { display: none !important; }
+  .sm\:block { display: block !important; }
+  .sm\:flex { display: flex !important; }
+  .sm\:grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .sm\:text-sm { font-size: var(--text-sm); }
+  .sm\:text-base { font-size: var(--text-base); }
+  .sm\:text-lg { font-size: var(--text-lg); }
+  .sm\:text-xl { font-size: var(--text-xl); }
+  .sm\:text-2xl { font-size: var(--text-2xl); }
+  .sm\:text-3xl { font-size: var(--text-3xl); }
+  .sm\:text-4xl { font-size: var(--text-4xl); }
+}
+
+/* 平板 (768px+) */
+@media (min-width: 768px) {
+  .container {
+    max-width: var(--container-md);
+    padding-left: var(--space-lg);
+    padding-right: var(--space-lg);
+  }
+  
+  .grid {
+    gap: var(--space-lg);
+  }
+  
+  .md\:hidden { display: none !important; }
+  .md\:block { display: block !important; }
+  .md\:flex { display: flex !important; }
+  .md\:grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .md\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .md\:text-base { font-size: var(--text-base); }
+  .md\:text-lg { font-size: var(--text-lg); }
+  .md\:text-xl { font-size: var(--text-xl); }
+  .md\:text-2xl { font-size: var(--text-2xl); }
+  .md\:text-3xl { font-size: var(--text-3xl); }
+  .md\:text-4xl { font-size: var(--text-4xl); }
+  .md\:text-5xl { font-size: var(--text-5xl); }
+}
+
+/* 小桌面 (1024px+) */
+@media (min-width: 1024px) {
+  .container {
+    max-width: var(--container-lg);
+    padding-left: var(--space-xl);
+    padding-right: var(--space-xl);
+  }
+  
+  .grid {
+    gap: var(--space-xl);
+  }
+  
+  .lg\:hidden { display: none !important; }
+  .lg\:block { display: block !important; }
+  .lg\:flex { display: flex !important; }
+  .lg\:grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+  .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .lg\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* 大桌面 (1280px+) */
+@media (min-width: 1280px) {
+  .container {
+    max-width: var(--container-xl);
+    padding-left: var(--space-2xl);
+    padding-right: var(--space-2xl);
+  }
+  
+  .xl\:hidden { display: none !important; }
+  .xl\:block { display: block !important; }
+  .xl\:flex { display: flex !important; }
+  .xl\:grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+  .xl\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .xl\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .xl\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .xl\:grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* 超大桌面 (1536px+) */
+@media (min-width: 1536px) {
+  .container {
+    max-width: var(--container-2xl);
+  }
+  
+  .\32xl\:hidden { display: none !important; }
+  .\32xl\:block { display: block !important; }
+  .\32xl\:flex { display: flex !important; }
+  .\32xl\:grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* 移動優先的字體縮放 */
+@media (max-width: 479px) {
+  :root {
+    --text-xs: 0.6875rem;   /* 11px */
+    --text-sm: 0.8125rem;   /* 13px */
+    --text-base: 0.9375rem; /* 15px */
+    --text-lg: 1.0625rem;   /* 17px */
+    --text-xl: 1.1875rem;   /* 19px */
+    --text-2xl: 1.375rem;   /* 22px */
+    --text-3xl: 1.625rem;   /* 26px */
+    --text-4xl: 2rem;       /* 32px */
+  }
+}
+
+/* 觸控友好的點擊區域 */
+@media (hover: none) and (pointer: coarse) {
+  /* 移動設備專用樣式 */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  button, 
+  .btn, 
+  a[role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* 增加選單項目的點擊區域 */
+  .menu-item {
+    min-height: 44px;
+    padding: 0.875rem 1rem;
+  }
+}
+
+/* 減少動畫效果（針對偏好設定） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 高對比度支援 */
+@media (prefers-contrast: high) {
+  :root {
+    --mountain-primary: #0f5132;
+    --sky-primary: #003d82;
+    --earth-primary: #7c2d12;
+    --stone-dark: #000000;
+    --stone-medium: #333333;
+  }
+}
+
+/* 深色模式支援（預留） */
+@media (prefers-color-scheme: dark) {
+  /* 後續可擴展深色模式 */
+}
+
+/* 螢幕閱讀器專用 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 列印樣式 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+} 

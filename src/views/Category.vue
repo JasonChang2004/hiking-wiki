@@ -633,23 +633,267 @@ watch(
 /* 響應式設計 */
 @media (max-width: 768px) {
   .category-title {
-    font-size: 2rem;
+    font-size: var(--text-3xl);
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-sm);
   }
 
-  .article-grid {
-    grid-template-columns: 1fr;
+  .category-description {
+    font-size: var(--text-base);
+  }
+
+  .container {
+    padding: 0 var(--space-sm);
+  }
+
+  .category-header {
+    margin-bottom: var(--space-2xl);
   }
 
   .results-header {
     flex-direction: column;
     text-align: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+  }
+
+  .results-count {
+    justify-content: center;
+  }
+
+  .count-number {
+    font-size: var(--text-xl);
+  }
+
+  .article-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .article-card {
+    margin: 0;
+  }
+
+  .article-header {
+    padding: var(--space-md) var(--space-md) var(--space-sm);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .article-content {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .article-title {
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+  }
+
+  .article-excerpt {
+    font-size: var(--text-sm);
+    -webkit-line-clamp: 2;
+  }
+
+  .article-footer {
+    padding: 0 var(--space-md) var(--space-md);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
   }
 
   .empty-actions {
     flex-direction: column;
     align-items: center;
+  }
+
+  .empty-state {
+    padding: var(--space-2xl) var(--space-md);
+    margin: var(--space-xl) auto;
+  }
+
+  .empty-title {
+    font-size: var(--text-xl);
+  }
+
+  .empty-description {
+    font-size: var(--text-sm);
+  }
+
+  .loading-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 var(--space-xs);
+  }
+
+  .category-title {
+    font-size: var(--text-2xl);
+  }
+
+  .title-icon {
+    font-size: 1.5rem;
+  }
+
+  .category-description {
+    font-size: var(--text-sm);
+  }
+
+  .results-header {
+    padding: var(--space-sm);
+  }
+
+  .count-number {
+    font-size: var(--text-lg);
+  }
+
+  .filter-info {
+    font-size: var(--text-xs);
+  }
+
+  .article-title {
+    font-size: var(--text-base);
+  }
+
+  .article-excerpt {
+    font-size: var(--text-xs);
+  }
+
+  .article-category {
+    font-size: var(--text-xs);
+  }
+
+  .article-date {
+    font-size: var(--text-xs);
+  }
+
+  .author-info {
+    font-size: var(--text-xs);
+  }
+
+  .read-more {
+    font-size: var(--text-xs);
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+  }
+
+  .empty-title {
+    font-size: var(--text-lg);
+  }
+
+  .btn {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-sm);
+  }
+}
+
+/* 觸控設備優化 */
+@media (hover: none) and (pointer: coarse) {
+  .article-link {
+    touch-action: manipulation;
+  }
+
+  .btn {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .article-card {
+    transition: none;
+  }
+
+  .article-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  .read-more {
+    opacity: 1; /* 在觸控設備上總是顯示 */
+  }
+}
+
+/* 網格自適應優化 */
+@media (min-width: 480px) and (max-width: 768px) {
+  .article-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .article-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .article-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+/* 高對比度模式 */
+@media (prefers-contrast: high) {
+  .mountain-category {
+    background: white;
+  }
+
+  .article-card {
+    border: 2px solid var(--stone-dark);
+    background: white;
+  }
+
+  .results-header,
+  .empty-state {
+    border: 1px solid var(--stone-dark);
+    background: white;
+  }
+}
+
+/* 減少動畫效果 */
+@media (prefers-reduced-motion: reduce) {
+  .article-card,
+  .hover-overlay {
+    transition: none;
+  }
+
+  .loading-shimmer {
+    animation: none;
+  }
+
+  .loading-text {
+    animation: none;
+  }
+
+  @keyframes slideInUp {
+    from, to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* 列印模式 */
+@media print {
+  .mountain-category {
+    background: white;
+    color: black;
+  }
+
+  .hover-overlay,
+  .loading-section {
+    display: none;
+  }
+
+  .article-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid black;
   }
 }
 </style>

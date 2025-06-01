@@ -17,7 +17,8 @@ export interface Article {
   reviewedAt?: Timestamp | Date;
   // For potential future enhancements
   summary?: string; 
-  imageUrl?: string; 
+  imageUrl?: string;
+  images?: string[]; // 新增：圖片URL陣列
 }
 
 export interface UserProfile { // Renamed from User to avoid conflict with Firebase User type

@@ -1,27 +1,33 @@
 <script setup lang="ts">
 import NavBar from './components/layout/NavBar.vue'
+import MobileNavigation from './components/layout/MobileNavigation.vue'
 import { ref, onMounted, onUpdated, nextTick, onBeforeUnmount } from 'vue'
 
 const navBarRef = ref<InstanceType<typeof NavBar> | null>(null)
 const mainContentRef = ref<HTMLElement | null>(null)
 
 const updateMainContentMargin = async () => {
-  await nextTick() // 等待 DOM 更新完成
-  if (navBarRef.value && mainContentRef.value) {
-    // 確認 navBarRef.value.$el 存在並且是 HTMLElement
-    const navBarElement = navBarRef.value.$el as HTMLElement
-    if (navBarElement && typeof navBarElement.offsetHeight === 'number') {
-      const navBarHeight = navBarElement.offsetHeight
-      mainContentRef.value.style.paddingTop = `${navBarHeight}px` // 緊貼導航欄，無額外緩衝
+  await nextTick()
+  if (mainContentRef.value) {
+    const isMobile = window.innerWidth <= 768
+    if (isMobile) {
+      // 移動端：有80px的標題高度
+      mainContentRef.value.style.paddingTop = '80px'
+      mainContentRef.value.style.paddingBottom = 'calc(var(--space-2xl) + 80px)' // 考慮底部導航高度
     } else {
-      // Fallback or error handling if navBarElement is not as expected
-      // 更新預設值以匹配新的導航欄高度 (100px header + 60px nav)
-      mainContentRef.value.style.paddingTop = '160px'; // 預設值，對應導航欄總高度
-    }
-  } else {
-    // Fallback if refs are not available
-    if (mainContentRef.value) {
-        mainContentRef.value.style.paddingTop = '160px'; // 預設值
+      // 桌面端：使用原有邏輯
+      if (navBarRef.value) {
+        const navBarElement = navBarRef.value.$el as HTMLElement
+        if (navBarElement && typeof navBarElement.offsetHeight === 'number') {
+          const navBarHeight = navBarElement.offsetHeight
+          mainContentRef.value.style.paddingTop = `${navBarHeight}px`
+        } else {
+          mainContentRef.value.style.paddingTop = '160px'
+        }
+      } else {
+        mainContentRef.value.style.paddingTop = '160px'
+      }
+      mainContentRef.value.style.paddingBottom = 'var(--space-2xl)'
     }
   }
 }
@@ -42,7 +48,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="mountain-app">
-    <NavBar ref="navBarRef" />
+    <!-- 桌面版導航 -->
+    <NavBar ref="navBarRef" class="desktop-nav" />
+    
+    <!-- 移動端導航 -->
+    <MobileNavigation class="mobile-nav" />
+    
     <main class="main-content" ref="mainContentRef">
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
@@ -66,18 +77,53 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  font-family: var(--font-body);
 }
 
-/* 主內容區域 - 動態適應導航欄高度 */
+/* 導航顯示控制 */
+.desktop-nav {
+  display: none;
+}
+
+.mobile-nav {
+  display: block;
+}
+
+@media (min-width: 769px) {
+  .desktop-nav {
+    display: block;
+  }
+  
+  .mobile-nav {
+    display: none;
+  }
+}
+
+/* 在移動端確保桌面導航完全隱藏 */
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  .mobile-nav {
+    display: block !important;
+  }
+}
+
+/* 主內容區域 */
 .main-content {
-  max-width: 1280px;
+  max-width: var(--container-xl);
   margin: 0 auto;
-  padding-left: 0.75rem; /* 手機版較小的間距 */
-  padding-right: 0.75rem;
-  padding-bottom: 2rem; /* 保持底部 padding */
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+  padding-bottom: var(--space-2xl);
   position: relative;
   z-index: 5;
-  /* paddingTop is now set dynamically */
+  min-height: calc(100vh - 160px);
 }
 
 /* 背景裝飾 */
@@ -127,6 +173,18 @@ onBeforeUnmount(() => {
   animation-delay: -14s;
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+  66% {
+    transform: translateY(10px) rotate(-3deg);
+  }
+}
+
 /* 頁面轉場動畫 */
 .page-enter-active,
 .page-leave-active {
@@ -143,49 +201,177 @@ onBeforeUnmount(() => {
   transform: translateY(-20px);
 }
 
-/* 響應式設計 */
-@media (min-width: 640px) {
+/* 響應式設計優化 */
+@media (min-width: 320px) {
   .main-content {
-    padding-left: 1rem; /* 桌面版恢復正常間距 */
-    padding-right: 1rem;
+    padding-left: var(--space-sm);
+    padding-right: var(--space-sm);
   }
 }
 
+@media (min-width: 480px) {
+  .main-content {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding-left: var(--space-lg);
+    padding-right: var(--space-lg);
+    min-height: calc(100vh - 160px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    padding-left: var(--space-xl);
+    padding-right: var(--space-xl);
+  }
+}
+
+@media (min-width: 1280px) {
+  .main-content {
+    padding-left: var(--space-2xl);
+    padding-right: var(--space-2xl);
+  }
+}
+
+/* 移動端優化 */
 @media (max-width: 768px) {
   .main-content {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-bottom: calc(var(--space-2xl) + 60px); /* 考慮底部導航 */
+    min-height: calc(100vh - 120px);
+  }
+  
+  .background-decoration {
+    opacity: 0.2;
   }
   
   .decoration-element {
-    opacity: 0.2;
+    opacity: 0.5;
   }
   
   .element-1 {
     width: 200px;
     height: 200px;
+    top: -100px;
+    right: -100px;
   }
   
   .element-2 {
     width: 150px;
     height: 150px;
+    bottom: 15%;
+    left: -75px;
   }
   
   .element-3 {
     width: 100px;
     height: 100px;
+    top: 60%;
+    right: 5%;
   }
 }
 
-/* 滾動行為優化 */
+@media (max-width: 480px) {
+  .main-content {
+    min-height: calc(100vh - 100px);
+  }
+  
+  .element-1 {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .element-2 {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .element-3 {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* 橫向模式優化 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .main-content {
+    padding-top: 50px !important;
+    padding-bottom: 60px;
+  }
+  
+  .background-decoration {
+    opacity: 0.1;
+  }
+}
+
+/* 觸控設備優化 */
+@media (hover: none) and (pointer: coarse) {
+  .main-content {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 減少動畫效果 */
 @media (prefers-reduced-motion: reduce) {
   .page-enter-active,
   .page-leave-active {
-    transition: none;
+    transition: opacity 0.2s ease;
+  }
+  
+  .page-enter-from,
+  .page-leave-to {
+    transform: none;
   }
   
   .decoration-element {
     animation: none;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: none;
+    }
+  }
+}
+
+/* 高對比度模式 */
+@media (prefers-contrast: high) {
+  .mountain-app {
+    background: white;
+  }
+  
+  .background-decoration {
+    display: none;
+  }
+  
+  .main-content {
+    background: white;
+    color: black;
+  }
+}
+
+/* 列印模式 */
+@media print {
+  .desktop-nav,
+  .mobile-nav,
+  .background-decoration {
+    display: none !important;
+  }
+  
+  .main-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    min-height: auto !important;
+  }
+  
+  .page-enter-active,
+  .page-leave-active {
+    transition: none !important;
   }
 }
 
@@ -200,17 +386,42 @@ onBeforeUnmount(() => {
   color: var(--stone-dark);
 }
 
-/* 聚焦狀態的無障礙設計 */
-:focus-visible {
+/* 滾動條樣式 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 197, 94, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 197, 94, 0.5);
+}
+
+/* Focus 樣式改進 */
+*:focus-visible {
   outline: 2px solid var(--mountain-primary);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* 改善文字清晰度 */
-* {
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* 無障礙隱藏 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

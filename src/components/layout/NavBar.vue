@@ -384,15 +384,23 @@ onUnmounted(() => {
 
 /* 響應式設計 - 修正文字隱藏問題 */
 @media (max-width: 768px) {
+  /* 移動端保留標題，但隱藏導航欄 */
   .mountain-header {
+    display: block !important;
     height: 80px;
   }
   
   .navigation-bar {
-    top: 80px;
-    height: 50px;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: -9999px !important;
   }
   
+  /* 標題區域移動端優化 */
   .title-container {
     gap: 0.75rem;
   }
@@ -400,65 +408,19 @@ onUnmounted(() => {
   .mountain-icon {
     font-size: 2rem;
   }
-  
-  .nav-link {
-    padding: 0.375rem 0.75rem !important;
-    font-size: 0.8rem !important;
-  }
-  
-  .nav-icon {
-    font-size: 0.875rem !important;
-  }
-  
-  /* 確保在平板尺寸上文字始終顯示 */
-  .nav-text {
-    display: block !important;
-    font-size: 0.75rem !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    color: inherit !important;
-  }
-  
-  /* 選中狀態確保文字可見 */
-  .nav-link.router-link-active .nav-text,
-  .nav-link.active .nav-text {
-    display: block !important;
-    color: white !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
 }
 
-/* 只在極小螢幕上才隱藏文字 */
-@media (max-width: 380px) {
-  .title-container {
-    flex-direction: column;
-    gap: 0.25rem;
-    text-align: center;
-  }
-  
-  .mountain-icon {
-    font-size: 1.5rem;
-  }
-  
-  .nav-items {
-    gap: 0.25rem !important;
-  }
-  
-  .nav-link {
-    padding: 0.25rem 0.5rem !important;
-  }
-  
-  /* 只在極小螢幕(380px以下)才隱藏文字 */
-  .nav-text {
-    display: none !important;
-  }
-  
-  /* 但圖標始終顯示 */
-  .nav-icon {
+/* 只在桌面端顯示的備用規則 */
+@media (min-width: 769px) {
+  .mountain-header {
     display: block !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+    height: 100px;
+  }
+  
+  .navigation-bar {
+    display: block !important;
+    top: 100px;
+    height: 60px;
   }
 }
 

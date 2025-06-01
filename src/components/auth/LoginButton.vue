@@ -157,9 +157,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { auth, provider, db } from '../../firebase'
+import { auth, db } from '../../firebase'
 import { 
-  signInWithPopup, 
   signOut, 
   onAuthStateChanged
 } from 'firebase/auth'

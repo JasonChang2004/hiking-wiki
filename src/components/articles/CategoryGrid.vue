@@ -84,21 +84,6 @@ const categories = ref<CategoryItem[]>([
 
 const loadingCounts = ref(true);
 
-// 分類描述
-const getCategoryDescription = (categoryName: string): string => {
-  const descriptions: Record<string, string> = {
-    '登山路線': '熱門登山路線詳細攻略',
-    '裝備心得': '登山裝備選購與使用經驗',
-    '登山知識': '基礎登山技巧與安全知識',
-    '緊急應變': '山難預防與緊急處理',
-    '野外生存': '野外求生技能與技巧',
-    '保育生態': '山林生態保護與永續登山',
-    '登山飲食': '登山餐食準備與營養補給',
-    '入門指南': '新手登山完整入門指導',
-  };
-  return descriptions[categoryName] || '探索更多登山相關知識';
-};
-
 onMounted(async () => {
   loadingCounts.value = true;
   try {

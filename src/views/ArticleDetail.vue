@@ -59,12 +59,6 @@ const bookmarkArticle = () => {
   }
 }
 
-// 處理圖片載入錯誤
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI0MDAiIHZpZXdCb3g9IjAgMCAxMjAwIDQwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyMDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik01OTUgMTk1TDYwNSAyMDVINjE1TDYwNSAyMTVMNTk1IDIwNUw1ODUgMjE1TDU3NSAyMDVINTg1TDU5NSAxOTVaIiBmaWxsPSIjOUI5Qzk5Ii8+CjwvU3ZnPgo=';
-}
-
 onMounted(async () => {
   loading.value = true; // 確保 loading 狀態被設定
   try {

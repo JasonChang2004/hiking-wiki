@@ -75,6 +75,10 @@ onUnmounted(() => {
             <span class="nav-icon">🗂️</span>
             <span class="nav-text">知識庫</span>
           </router-link>
+          <router-link to="/submit-article" class="nav-link" active-class="router-link-active">
+            <span class="nav-icon">✍️</span>
+            <span class="nav-text">投稿新文章</span>
+          </router-link>
         </div>
         
         <!-- 用戶區域 -->

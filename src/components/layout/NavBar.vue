@@ -71,8 +71,8 @@ onUnmounted(() => {
             <span class="nav-icon">ℹ️</span>
             <span class="nav-text">關於</span>
           </router-link>
-          <router-link to="/category/所有文章" class="nav-link" active-class="router-link-active">
-            <span class="nav-icon">📚</span>
+          <router-link to="/knowledge" class="nav-link" active-class="router-link-active">
+            <span class="nav-icon">🗂️</span>
             <span class="nav-text">知識庫</span>
           </router-link>
         </div>

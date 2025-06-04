@@ -1,5 +1,41 @@
 <template>
-  <div class="mountain-home">
+  <div class="knowledge-hub">
+    <!-- 知識酷頁面標題 -->
+    <section class="knowledge-header">
+      <div class="container">
+        <div class="header-content">
+          <h1 class="page-title">
+            <span class="title-emoji">🗂️</span>
+            知識庫
+            <span class="title-accent">Knowledge Base</span>
+          </h1>
+          <p class="page-description">
+            探索豐富的登山知識內容，按主題分類整理，讓您輕鬆找到所需的專業資訊與實用指南。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分類導覽 -->
+    <section id="categories" class="categories-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">🗂️ 知識分類索引</h2>
+          <p class="section-subtitle">按主題探索豐富的登山知識內容</p>
+        </div>
+        <div class="category-container">
+          <Suspense>
+            <CategoryGrid />
+            <template #fallback>
+              <div class="loading-grid">
+                <div v-for="i in 8" :key="i" class="loading-card"></div>
+              </div>
+            </template>
+          </Suspense>
+        </div>
+      </div>
+    </section>
+
     <!-- 精選文章區塊 -->
     <section id="featured" class="featured-section">
       <div class="container">
@@ -48,7 +84,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 
-// 優化異步組件載入
+// 異步組件載入
 const ArticleList = defineAsyncComponent({
   loader: () => import('../components/articles/ArticleList.vue'),
   errorComponent: () => import('../components/common/ErrorComponent.vue'),
@@ -62,18 +98,89 @@ const FeaturedCarousel = defineAsyncComponent({
   delay: 200,
   timeout: 30000,
 })
+
+const CategoryGrid = defineAsyncComponent({
+  loader: () => import('../components/articles/CategoryGrid.vue'),
+  errorComponent: () => import('../components/common/ErrorComponent.vue'),
+  delay: 200,
+  timeout: 30000,
+})
 </script>
 
 <style scoped>
-.mountain-home {
+.knowledge-hub {
   font-family: var(--font-body);
-  padding-top: var(--space-xl);
 }
 
 .container {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 1rem;
+}
+
+/* 知識酷頁面標題 */
+.knowledge-header {
+  padding: var(--space-xl) 0;
+  background: linear-gradient(135deg, 
+    var(--mountain-50) 0%,
+    var(--sky-50) 50%,
+    var(--earth-50) 100%
+  );
+}
+
+.header-content {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  color: var(--stone-dark);
+  margin-bottom: var(--space-lg);
+  font-family: var(--font-display);
+  line-height: var(--leading-tight);
+}
+
+.title-emoji {
+  display: block;
+  font-size: 2.5rem;
+  margin-bottom: var(--space-sm);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.title-accent {
+  display: block;
+  font-size: var(--text-xl);
+  background: linear-gradient(135deg, var(--mountain-primary), var(--sky-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-top: var(--space-sm);
+  font-weight: 500;
+}
+
+.page-description {
+  font-size: var(--text-lg);
+  color: var(--stone-medium);
+  line-height: var(--leading-relaxed);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 分類導覽 */
+.categories-section {
+  padding: var(--space-xl) 0;
+  background: linear-gradient(135deg, 
+    var(--sky-50) 0%,
+    var(--mountain-50) 100%
+  );
 }
 
 /* 精選文章區塊 */
@@ -117,7 +224,8 @@ const FeaturedCarousel = defineAsyncComponent({
   margin-top: var(--space-lg);
 }
 
-/* 容器佈局修正 */
+/* 容器佈局 */
+.category-container,
 .featured-container,
 .latest-container {
   width: 100%;
@@ -151,11 +259,17 @@ const FeaturedCarousel = defineAsyncComponent({
 }
 
 /* 載入狀態 */
+.loading-grid,
 .loading-articles {
   display: grid;
   gap: var(--space-lg);
 }
 
+.loading-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.loading-card,
 .loading-article {
   height: 200px;
   background: rgba(255, 255, 255, 0.6);
@@ -164,6 +278,7 @@ const FeaturedCarousel = defineAsyncComponent({
   overflow: hidden;
 }
 
+.loading-card::before,
 .loading-article::before {
   content: '';
   position: absolute;
@@ -211,14 +326,31 @@ const FeaturedCarousel = defineAsyncComponent({
 
 /* 響應式設計 */
 @media (max-width: 768px) {
-  .mountain-home {
-    padding-top: var(--space-lg);
+  .knowledge-header {
+    padding: var(--space-lg) 0;
+  }
+  
+  .page-title {
+    font-size: var(--text-3xl);
+  }
+  
+  .title-emoji {
+    font-size: 2rem;
+  }
+  
+  .title-accent {
+    font-size: var(--text-lg);
+  }
+  
+  .page-description {
+    font-size: var(--text-base);
   }
   
   .section-title {
     font-size: var(--text-2xl);
   }
   
+  .categories-section,
   .featured-section {
     padding: var(--space-lg) 0;
   }
@@ -226,13 +358,25 @@ const FeaturedCarousel = defineAsyncComponent({
   .latest-section {
     padding: var(--space-lg) 0 var(--space-md);
   }
-  
-  .section-header {
-    margin-bottom: var(--space-sm);
-  }
 }
 
 @media (max-width: 480px) {
+  .knowledge-header {
+    padding: var(--space-md) 0;
+  }
+  
+  .page-title {
+    font-size: var(--text-2xl);
+  }
+  
+  .title-emoji {
+    font-size: 1.5rem;
+  }
+  
+  .title-accent {
+    font-size: var(--text-base);
+  }
+  
   .section-title {
     font-size: var(--text-xl);
   }
@@ -240,11 +384,5 @@ const FeaturedCarousel = defineAsyncComponent({
   .section-subtitle {
     font-size: var(--text-base);
   }
-  
-  .featured-section,
-  .latest-section {
-    padding: var(--space-2xl) 0;
-  }
 }
-</style>
-
+</style> 

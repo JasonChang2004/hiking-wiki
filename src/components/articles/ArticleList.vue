@@ -710,6 +710,14 @@ onMounted(() => {
 }
 
 /* 響應式設計 */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .article-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    max-width: 900px;
+  }
+}
+
 @media (max-width: 768px) {
   .search-filter-section {
     flex-direction: column;
